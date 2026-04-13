@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Matriz de Auditoría PCA™ | Talento Impulsa Consulting</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{background:#f0f4fa;font-family:'DM Sans',sans-serif}
+    input,textarea{font-family:'DM Sans',sans-serif}
+    textarea:focus,input:focus{border-color:#2E5090!important;box-shadow:0 0 0 3px rgba(46,80,144,.12)!important;outline:none}
+    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
+    .nav-pill:hover{background:#f0f5ff!important;transform:translateY(-1px)}
+    .nav-pill{transition:all .15s ease}
+    .score-btn{transition:all .15s;cursor:pointer}.score-btn:hover{transform:scale(1.08)}
+    .ghost-btn{transition:all .2s;cursor:pointer}.ghost-btn:hover{opacity:.88;transform:translateY(-1px)}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .fade-in{animation:fadeIn .4s ease forwards}
+    @keyframes pulse{0%,100%{box-shadow:0 4px 20px rgba(46,80,144,.15)}50%{box-shadow:0 6px 28px rgba(46,80,144,.3)}}
+    .pulse-card{animation:pulse 2.5s ease-in-out infinite}
+    .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+    .modal{background:#fff;border-radius:20px;padding:36px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useCallback } = React;
+const XLSX_LIB = window.XLSX;
+
+const CATEGORIES = [
+  {id:"tiempo",label:"Gestión del Tiempo",color:"#2E5090",light:"#EEF3FB",icon:"⏱",questions:[
+    {id:"t1",text:"¿Cuántas horas por semana dedica a responder emails?",type:"open"},
+    {id:"t2",text:"¿Cuántas reuniones semanales considera improductivas?",type:"open"},
+    {id:"t3",text:"¿Tiene un sistema claro de priorización de tareas?",type:"sinoparcial"},
+    {id:"t4",text:"¿Con qué frecuencia se siente abrumado por la cantidad de pendientes?",type:"frecuencia"},
+    {id:"t5",text:"¿Cuánto tiempo pierde buscando información dispersa (emails, docs, chats)?",type:"open"},
+  ]},
+  {id:"procesos",label:"Procesos Operativos",color:"#1a6e4a",light:"#EEF7F2",icon:"⚙️",questions:[
+    {id:"p1",text:"¿Qué tareas repetitivas consumen más tiempo cada semana?",type:"open"},
+    {id:"p2",text:"¿Tiene documentados sus procesos operativos clave?",type:"sinoparcial"},
+    {id:"p3",text:"¿Cuántas veces repite la misma tarea de forma manual sin automatizar?",type:"open"},
+    {id:"p4",text:"¿Existen cuellos de botella claros que retrasan entregas?",type:"open"},
+    {id:"p5",text:"¿Con qué frecuencia tiene que rehacer trabajo por falta de claridad inicial?",type:"frecuencia"},
+  ]},
+  {id:"comunicacion",label:"Comunicación",color:"#7B3F9E",light:"#F5EEFC",icon:"💬",questions:[
+    {id:"c1",text:"¿Cuánto tiempo dedica por semana a redactar comunicados, emails o informes?",type:"open"},
+    {id:"c2",text:"¿Tiene plantillas o guías para comunicaciones frecuentes?",type:"sinoparcial"},
+    {id:"c3",text:"¿Con qué frecuencia tiene que reescribir comunicados por tono inadecuado?",type:"frecuencia"},
+    {id:"c4",text:"¿Recibe quejas por emails poco claros o mal redactados?",type:"open"},
+    {id:"c5",text:"¿Cuántos borradores descartados tiene porque no logra expresar lo que quiere?",type:"open"},
+  ]},
+  {id:"documental",label:"Gestión Documental",color:"#A0521C",light:"#FDF3EC",icon:"📂",questions:[
+    {id:"d1",text:"¿Cuánto tiempo dedica a leer y resumir documentos extensos?",type:"open"},
+    {id:"d2",text:"¿Tiene un sistema de archivo y búsqueda de documentos eficiente?",type:"sinoparcial"},
+    {id:"d3",text:"¿Con qué frecuencia necesita releer documentos porque no hizo síntesis?",type:"frecuencia"},
+    {id:"d4",text:"¿Pierde tiempo estructurando información dispersa de múltiples fuentes?",type:"open"},
+    {id:"d5",text:"¿Tiene procesos claros para convertir datos en informes ejecutivos?",type:"sinoparcial"},
+  ]},
+  {id:"decisiones",label:"Toma de Decisiones",color:"#B5860D",light:"#FDF8EC",icon:"🎯",questions:[
+    {id:"dec1",text:"¿Tiene criterios claros para delegar vs hacer usted mismo?",type:"sinoparcial"},
+    {id:"dec2",text:"¿Cuántas decisiones operativas repetitivas toma por semana que podrían sistematizarse?",type:"open"},
+    {id:"dec3",text:"¿Posterga decisiones por falta de información estructurada?",type:"frecuencia"},
+    {id:"dec4",text:"¿Tiene una matriz de prioridades clara para asignar tiempo a proyectos?",type:"sinoparcial"},
+    {id:"dec5",text:"¿Con qué frecuencia trabaja en urgente pero no importante?",type:"frecuencia"},
+  ]},
+];
+
+const FRECUENCIA = ["Nunca","Rara vez","A veces","Frecuentemente","Siempre"];
+const SINOPARCIAL = ["No","Parcial","Sí"];
+const SCORE_LABELS = ["","Crítico","Débil","Medio","Bueno","Óptimo"];
+
+const PACKS = {
+  autonomia:{emoji:"🚀",name:"Pack Autonomía PCA™",tagline:"Nivel Profesional Individual",color:"#2E5090",bg:"#EEF3FB",
+    description:"Para profesionales que quieren implementar IA de forma segura y efectiva en su trabajo diario, recuperando 5-10 horas semanales.",
+    includes:["Diagnóstico PCA — Sesión 60 min + Matriz de Auditoría","Prompt Studio: 30 prompts validados en Canva para tu industria","Protocolo de Humanidad Digital — PDF guía de uso responsable","Sesión de Implementación Práctica (90 min con casos reales)","Kit de Seguimiento: 5 videos tutoriales + 1 video personalizado","Follow-up a los 15 días para ajustar y consolidar resultados"],
+    outcome:"Ahorro estimado de 5 a 10 horas semanales desde la primera semana"},
+  equipo:{emoji:"👥",name:"Pack Digital Equipo",tagline:"Nivel Equipo / Organización",color:"#1a6e4a",bg:"#EEF7F2",
+    description:"Para equipos que necesitan sistematizar su comunicación, documentación y procesos colaborativos con IA, sin perder criterio profesional.",
+    includes:["Diagnóstico PCA grupal con Matriz de Auditoría para el equipo","Diseño de protocolos de comunicación con IA por área","Biblioteca de prompts personalizada según funciones del equipo","Sesión de implementación grupal (2 hs con casos reales del equipo)","Protocolo de Humanidad Digital y seguridad de datos institucional","Seguimiento mensual con ajuste de sistemas durante 30 días"],
+    outcome:"Equipos que trabajan con criterio, velocidad y coherencia"},
+  mentoria:{emoji:"🧭",name:"Mentoría Estratégica 1:1",tagline:"Nivel Liderazgo Consciente",color:"#7B3F9E",bg:"#F5EEFC",
+    description:"Para líderes y directivos que necesitan rediseñar su arquitectura de trabajo: delegación inteligente, toma de decisiones y liderazgo con IA.",
+    includes:["Diagnóstico PCA ejecutivo — Matriz + entrevista en profundidad","Diseño del Sistema de Delegación Inteligente personalizado","Arquitectura de toma de decisiones con criterio aumentado","4 sesiones 1:1 de implementación (60 min c/u)","Protocolo CREF de instrucción IA personalizado para tu rol","Acompañamiento continuo con revisiones quincenales"],
+    outcome:"Liderazgo estratégico sin carga operativa"},
+  institucional:{emoji:"🏛️",name:"Consultoría Institucional PCA™",tagline:"Nivel Transformación Organizacional",color:"#A0521C",bg:"#FDF3EC",
+    description:"Para organizaciones que necesitan transformar su arquitectura de trabajo de forma sistémica, integrando IA en todos los niveles con responsabilidad y criterio.",
+    includes:["Diagnóstico organizacional completo con Matriz PCA por área","Diseño de sistemas de productividad replicables por nivel","Capacitación: operativo, táctico y estratégico","Protocolo de seguridad de datos institucional personalizado","Implementación por etapas con métricas de avance claras","Seguimiento y ajuste durante 90 días"],
+    outcome:"Transformación digital consciente, sostenible y medible"},
+};
+
+function getRecommendation(catScores, totalPct) {
+  const pcts = Object.fromEntries(Object.entries(catScores).map(([k,v]) => [k,v/25]));
+  const críticas = Object.entries(pcts).filter(([,v]) => v<0.4).map(([k]) => k);
+  const mejorables = Object.entries(pcts).filter(([,v]) => v>=0.4&&v<0.7).map(([k]) => k);
+
+  let packKey, reasoning;
+  if (totalPct < 0.35) {
+    packKey = "institucional";
+    reasoning = `El diagnóstico revela una situación crítica transversal (${críticas.length} de 5 áreas en estado crítico). Se requiere una intervención sistémica que reordene la arquitectura de trabajo desde sus cimientos, en todos los niveles de la organización.`;
+  } else if (críticas.includes("decisiones") && (críticas.includes("procesos") || críticas.includes("tiempo"))) {
+    packKey = "mentoria";
+    reasoning = "El perfil muestra dificultades estructurales en toma de decisiones combinadas con problemas de procesos o tiempo. Esto indica que el problema no es solo de herramientas sino de arquitectura de liderazgo: el sistema de delegación y los criterios de priorización necesitan ser rediseñados.";
+  } else if ((pcts.comunicacion < 0.55 || críticas.includes("comunicacion")) && (pcts.documental < 0.55 || críticas.includes("documental"))) {
+    packKey = "equipo";
+    reasoning = "Los cuellos de botella principales están en comunicación y gestión documental — áreas que típicamente impactan a equipos completos más que a individuos aislados. La solución requiere sistematizar flujos colaborativos y protocolos de trabajo conjunto.";
+  } else {
+    packKey = "autonomia";
+    reasoning = completed < 25
+      ? "Con las respuestas registradas hasta ahora, el perfil apunta a oportunidades claras de optimización individual. Con el sistema y los prompts correctos, podés recuperar entre 5 y 10 horas semanales de forma inmediata."
+      : totalPct < 0.7
+      ? "El diagnóstico identifica oportunidades claras de optimización individual en las áreas con menor puntaje. Con el sistema correcto, podés recuperar entre 5 y 10 horas semanales desde la primera semana de implementación."
+      : "Tenés una base sólida. Aún así, existen áreas puntuales que, al optimizarse con IA de forma estratégica, pueden multiplicar tu capacidad de trabajo estratégico y reducir la fricción operativa restante.";
+  }
+
+  const pack = PACKS[packKey];
+
+  const sorted = Object.entries(pcts).sort(([,a],[,b]) => a-b);
+  const msgs = {
+    tiempo:`Gestión del tiempo: Se detecta pérdida significativa de horas en tareas operativas y búsqueda de información dispersa. Con IA, estos procesos pueden reducirse en un 60-70%.`,
+    procesos:`Procesos operativos: Existen tareas repetitivas sin sistematizar y falta de documentación que genera retrabajo constante. La automatización inteligente puede liberar horas de trabajo manual semanal.`,
+    comunicacion:`Comunicación: La redacción manual y la falta de plantillas consumen tiempo valioso. Con un sistema de prompts validados, la producción de comunicados puede reducirse de horas a minutos.`,
+    documental:`Gestión documental: La información dispersa y la falta de síntesis generan fricción operativa y decisiones demoradas. Un sistema de procesamiento de documentos con IA puede cambiar esto radicalmente.`,
+    decisiones:`Toma de decisiones: La ausencia de criterios claros de delegación y priorización impacta en la eficiencia del liderazgo. Sistematizar estas decisiones es el paso que libera mayor capacidad estratégica.`,
+  };
+
+  const bottlenecks = sorted.slice(0,3).map(([catId,pct]) => {
+    const cat = CATEGORIES.find(c => c.id===catId);
+    return {cat:cat.label, icon:cat.icon, pct, text:msgs[catId]};
+  });
+
+  const packTexts = {
+    autonomia:`Con el ${pack.name}, implementaremos un sistema personalizado que ataca directamente estos cuellos de botella. A través de prompts validados, protocolos de delegación inteligente y sesiones de implementación práctica, podés recuperar entre 5 y 10 horas semanales que hoy estás perdiendo en operativa.`,
+    equipo:`El ${pack.name} está diseñado para sistematizar exactamente los flujos donde están los mayores cuellos de botella detectados. Construiremos protocolos de trabajo colaborativo con IA, una biblioteca de prompts por área y un sistema de comunicación y documentación que funcione sin depender de la improvisación.`,
+    mentoria:`La ${pack.name} es el camino para rediseñar la arquitectura de tu liderazgo. En las sesiones 1:1 trabajaremos el Sistema de Delegación Inteligente PCA™, criterios claros de toma de decisiones y la integración de IA en los momentos estratégicos de tu rol, sin perder el control ni la humanidad.`,
+    institucional:`La ${pack.name} es la respuesta adecuada para una transformación de este alcance. Trabajaremos por etapas: primero ordenamos la arquitectura de cada área, luego sistematizamos procesos por nivel (operativo, táctico, estratégico) y garantizamos la sostenibilidad del cambio con métricas y seguimiento durante 90 días.`,
+  };
+
+  const levelLabel = totalPct<0.4?"crítico que requiere intervención urgente":totalPct<0.7?"con potencial de mejora significativo":"con base sólida y oportunidades de optimización";
+  const recoText = `El diagnóstico muestra un perfil ${levelLabel}. Las áreas con mayor oportunidad de mejora son: ${bottlenecks.map(b=>b.cat.toLowerCase()).join(", ")}.\n\n${packTexts[packKey]}\n\nResultado esperado: ${pack.outcome}.`;
+
+  return {pack, packKey, reasoning, bottlenecks, recoText};
+}
+
+let completed = 0;
+
+function ScoreBtn({value,selected,color,onClick}) {
+  return (
+    <button className="score-btn" onClick={()=>onClick(value)} style={{
+      width:50,padding:"7px 0",borderRadius:8,border:selected?`2px solid ${color}`:"2px solid #e2e8f0",
+      background:selected?color:"#fff",color:selected?"#fff":"#64748b",fontWeight:700,
+      boxShadow:selected?`0 2px 8px ${color}44`:"none",
+      display:"flex",flexDirection:"column",alignItems:"center",gap:2,fontFamily:"'DM Sans',sans-serif",
+    }}>
+      <span style={{fontSize:17}}>{value}</span>
+      <span style={{fontSize:8.5,opacity:.85}}>{SCORE_LABELS[value]}</span>
+    </button>
+  );
+}
+
+function QuestionCard({question,catColor,catLight,answers,onChange}) {
+  const ans = answers[question.id]||{};
+  return (
+    <div style={{background:"#fff",borderRadius:12,padding:"15px 17px",marginBottom:11,
+      border:"1px solid #e8edf5",borderLeft:`4px solid ${catColor}`,boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
+      <p style={{margin:"0 0 11px",fontSize:14,color:"#1e293b",lineHeight:1.55,fontWeight:500}}>{question.text}</p>
+      <div style={{display:"flex",gap:11,flexWrap:"wrap",alignItems:"flex-start"}}>
+        <div style={{flex:"1 1 210px",minWidth:170}}>
+          <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.6,textTransform:"uppercase"}}>Respuesta</label>
+          {question.type==="frecuencia"?(
+            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:6}}>
+              {FRECUENCIA.map(opt=>(
+                <button key={opt} onClick={()=>onChange(question.id,"respuesta",opt)} style={{
+                  padding:"4px 9px",borderRadius:20,cursor:"pointer",fontSize:11.5,fontWeight:600,
+                  transition:"all .12s",fontFamily:"'DM Sans',sans-serif",
+                  border:ans.respuesta===opt?`2px solid ${catColor}`:"1.5px solid #e2e8f0",
+                  background:ans.respuesta===opt?catLight:"#fff",color:ans.respuesta===opt?catColor:"#64748b",
+                }}>{opt}</button>
+              ))}
+            </div>
+          ):question.type==="sinoparcial"?(
+            <div style={{display:"flex",gap:7,marginTop:6}}>
+              {SINOPARCIAL.map(opt=>(
+                <button key={opt} onClick={()=>onChange(question.id,"respuesta",opt)} style={{
+                  padding:"5px 16px",borderRadius:20,cursor:"pointer",fontSize:12,fontWeight:700,
+                  transition:"all .12s",fontFamily:"'DM Sans',sans-serif",
+                  border:ans.respuesta===opt?`2px solid ${catColor}`:"1.5px solid #e2e8f0",
+                  background:ans.respuesta===opt?catColor:"#fff",color:ans.respuesta===opt?"#fff":"#64748b",
+                }}>{opt}</button>
+              ))}
+            </div>
+          ):(
+            <textarea rows={2} value={ans.respuesta||""} onChange={e=>onChange(question.id,"respuesta",e.target.value)}
+              placeholder="Escribí la respuesta del cliente..." style={{
+                width:"100%",marginTop:6,padding:"7px 10px",borderRadius:8,border:"1.5px solid #e2e8f0",
+                fontSize:13,resize:"vertical",color:"#1e293b",fontFamily:"'DM Sans',sans-serif"}}/>
+          )}
+        </div>
+        <div style={{flexShrink:0}}>
+          <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.6,textTransform:"uppercase"}}>Puntaje</label>
+          <div style={{display:"flex",gap:5,marginTop:6}}>
+            {[1,2,3,4,5].map(v=><ScoreBtn key={v} value={v} selected={ans.puntaje===v} color={catColor} onClick={val=>onChange(question.id,"puntaje",val)}/>)}
+          </div>
+        </div>
+        <div style={{flex:"1 1 130px",minWidth:120}}>
+          <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.6,textTransform:"uppercase"}}>Notas</label>
+          <textarea rows={2} value={ans.notas||""} onChange={e=>onChange(question.id,"notas",e.target.value)}
+            placeholder="Anotaciones internas..." style={{
+              width:"100%",marginTop:6,padding:"7px 9px",borderRadius:8,border:"1.5px dashed #cbd5e1",
+              fontSize:11.5,resize:"vertical",color:"#475569",background:"#fafbfd",fontFamily:"'DM Sans',sans-serif"}}/>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ResultBar({label,score,max}) {
+  const pct = max>0?score/max:0;
+  const status = pct<0.4?"🔴 CRÍTICO":pct<0.7?"🟡 MEJORABLE":"🟢 BIEN";
+  const bg = pct<0.4?"#fee2e2":pct<0.7?"#fef3c7":"#dcfce7";
+  const tc = pct<0.4?"#dc2626":pct<0.7?"#d97706":"#16a34a";
+  const bar = pct<0.4?"#ef4444":pct<0.7?"#f59e0b":"#22c55e";
+  return (
+    <div style={{marginBottom:12}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
+        <span style={{fontSize:12.5,fontWeight:600,color:"#1e293b"}}>{label}</span>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:11.5,color:"#64748b"}}>{score}/{max}</span>
+          <span style={{fontSize:10.5,fontWeight:700,padding:"2px 9px",borderRadius:20,background:bg,color:tc}}>{status}</span>
+        </div>
+      </div>
+      <div style={{height:7,background:"#f1f5f9",borderRadius:99}}>
+        <div style={{height:"100%",width:`${pct*100}%`,background:bar,borderRadius:99,transition:"width .7s cubic-bezier(.4,0,.2,1)"}}/>
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [clientName, setClientName] = useState("");
+  const [industry,   setIndustry]   = useState("");
+  const [clientPhone,setClientPhone] = useState("");
+  const [clientEmail,setClientEmail] = useState("");
+  const [answers,    setAnswers]     = useState({});
+  const [manualNotes,setManualNotes] = useState("");
+  const [exported,   setExported]    = useState(false);
+  const [showClear,  setShowClear]   = useState(false);
+
+  const handleChange = useCallback((qid,field,value) =>
+    setAnswers(prev=>({...prev,[qid]:{...prev[qid],[field]:value}})), []);
+
+  const getCatScore = cat => cat.questions.reduce((s,q)=>s+(answers[q.id]?.puntaje||0),0);
+  const catScores = useMemo(()=>Object.fromEntries(CATEGORIES.map(c=>[c.id,getCatScore(c)])),[answers]);
+  const totalScore = Object.values(catScores).reduce((a,b)=>a+b,0);
+  const totalPct = totalScore/125;
+  completed = CATEGORIES.reduce((s,c)=>s+c.questions.filter(q=>answers[q.id]?.puntaje).length,0);
+
+  const reco = useMemo(()=>{
+    if(completed<10) return null;
+    return getRecommendation(catScores,totalPct);
+  },[catScores,totalPct,completed]);
+
+  const totalDiag = totalPct<0.4?"🔴 Requiere intervención urgente":totalPct<0.7?"🟡 Tiene potencial de mejora":"🟢 Está bien encaminado";
+  const totalBg = totalPct<0.4?"#fef2f2":totalPct<0.7?"#fffbeb":"#f0fdf4";
+  const totalTc = totalPct<0.4?"#dc2626":totalPct<0.7?"#d97706":"#16a34a";
+
+  const handleClear = () => {
+    setClientName("");setIndustry("");setClientPhone("");setClientEmail("");setAnswers({});setManualNotes("");setShowClear(false);
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
+
+  const exportExcel = () => {
+    const today = new Date().toLocaleDateString("es-AR");
+    const wb = XLSX_LIB.utils.book_new();
+
+    const data = [
+      ["MATRIZ DE AUDITORÍA PCA™ — Diagnóstico de Productividad Consciente Aumentada"],
+      ["Talento Impulsa Consulting  |  María Soledad Vila"],
+      ["talentoimpulsa@outlook.com  ·  +54 9 11 69580303  ·  @talentoimpulsaconsulting"],
+      [],
+      ["Cliente / Empresa:", clientName||"—", "", "Industria:", industry||"—", "", "Fecha:", today],
+      ["Celular:", clientPhone||"—", "", "Email:", clientEmail||"—"],
+      [],
+      ["─".repeat(80)],
+      ["DIAGNÓSTICO COMPLETO — 25 PREGUNTAS"],
+      ["─".repeat(80)],
+      ["CATEGORÍA","PREGUNTA","RESPUESTA DEL CLIENTE","PUNTAJE (1-5)","NOTAS DEL CONSULTOR"],
+    ];
+
+    CATEGORIES.forEach(cat=>{
+      cat.questions.forEach((q,i)=>{
+        const a=answers[q.id]||{};
+        data.push([i===0?`${cat.icon} ${cat.label}`:"",q.text,a.respuesta||"",a.puntaje||"",a.notas||""]);
+      });
+      data.push(["","","","",""]);
+    });
+
+    data.push(["─".repeat(80)],["RESULTADOS DEL DIAGNÓSTICO"],["─".repeat(80)]);
+    data.push(["","Categoría","Puntaje Obtenido","Puntaje Máximo","% Eficiencia","Diagnóstico"]);
+    CATEGORIES.forEach(cat=>{
+      const s=catScores[cat.id]; const p=s/25;
+      data.push(["",`${cat.icon} ${cat.label}`,s,25,`${Math.round(p*100)}%`,p<0.4?"🔴 CRÍTICO":p<0.7?"🟡 MEJORABLE":"🟢 BIEN"]);
+    });
+    const td=totalPct<0.4?"🔴 REQUIERE INTERVENCIÓN URGENTE":totalPct<0.7?"🟡 TIENE POTENCIAL DE MEJORA":"🟢 ESTÁ BIEN ENCAMINADO";
+    data.push(["","🏆 PUNTAJE TOTAL",totalScore,125,`${Math.round(totalPct*100)}%`,td]);
+
+    if(reco){
+      data.push([],["─".repeat(80)],["PRINCIPALES CUELLOS DE BOTELLA DETECTADOS"],["─".repeat(80)]);
+      reco.bottlenecks.forEach((b,i)=>data.push([`${i+1}.`,`${b.icon} ${b.cat} (${Math.round(b.pct*100)}% eficiencia)`,b.text]));
+
+      data.push([],["─".repeat(80)],["SOLUCIÓN RECOMENDADA"],["─".repeat(80)]);
+      data.push([reco.pack.emoji+" "+reco.pack.name,"","",reco.pack.tagline]);
+      data.push(["Por qué este pack:",reco.reasoning]);
+      data.push([],[" QUÉ INCLUYE:"]);
+      reco.pack.includes.forEach(inc=>data.push(["","  ✓ "+inc]));
+      data.push(["","Resultado esperado:","",reco.pack.outcome]);
+
+      data.push([],["─".repeat(80)],["RECOMENDACIONES PERSONALIZADAS"],["─".repeat(80)]);
+      data.push([reco.recoText]);
+    }
+
+    if(manualNotes){
+      data.push([],["─".repeat(80)],["NOTAS ADICIONALES DEL CONSULTOR"],["─".repeat(80)]);
+      data.push([manualNotes]);
+    }
+
+    data.push([],["─".repeat(80)],["Para más información:"]);
+    data.push(["","talentoimpulsa@outlook.com  ·  +54 9 11 69580303  ·  @talentoimpulsaconsulting"]);
+
+    const ws = XLSX_LIB.utils.aoa_to_sheet(data);
+    ws["!cols"] = [{wch:26},{wch:52},{wch:30},{wch:14},{wch:14},{wch:32}];
+    XLSX_LIB.utils.book_append_sheet(wb,ws,"Diagnóstico PCA");
+
+    // Sheet 2
+    const guia=[
+      ["GUÍA DE INTERPRETACIÓN — PCA™"],["Talento Impulsa Consulting"],[],
+      ["ESCALA DE PUNTAJE 1 A 5"],[],
+      ["PUNTAJE","NIVEL","DESCRIPCIÓN"],
+      [1,"🔴 Crítico","Situación grave. No existe sistema ni proceso establecido."],
+      [2,"🟠 Débil","Situación problemática. Sistema muy deficiente o casi inexistente."],
+      [3,"🟡 Medio","Mejorable. Sistema parcial que funciona pero con mucho esfuerzo."],
+      [4,"🟢 Bueno","Aceptable. Sistema funcional con áreas específicas de mejora."],
+      [5,"✨ Óptimo","Excelente. Sistema consolidado, eficiente y reproducible."],
+      [],[],["INTERPRETACIÓN GLOBAL"],[],
+      ["RANGO","DIAGNÓSTICO","ACCIÓN SUGERIDA"],
+      ["0–40%","🔴 CRÍTICO","Intervención urgente y sistémica."],
+      ["40–70%","🟡 MEJORABLE","Optimización con sistema y acompañamiento."],
+      ["70–100%","🟢 BIEN","Refinamiento y escalabilidad."],
+      [],[],["NUESTROS PACKS"],[],
+      ["PACK","NIVEL","IDEAL PARA","RESULTADO"],
+      ["🚀 Pack Autonomía PCA™","Profesional Individual","Profesionales con baja eficiencia personal","Ahorrar 5-10 hs semanales"],
+      ["👥 Pack Digital Equipo","Equipo / Organización","Equipos con problemas de comunicación y documentación","Procesos colaborativos sistematizados"],
+      ["🧭 Mentoría Estratégica 1:1","Liderazgo Consciente","Líderes con problemas de delegación y decisiones","Arquitectura de liderazgo rediseñada"],
+      ["🏛️ Consultoría Institucional","Transformación Org.","Organizaciones con cuellos de botella sistémicos","Transformación digital sostenible"],
+      [],[],["CONTACTO"],[],
+      ["María Soledad Vila","talentoimpulsa@outlook.com","+54 9 11 69580303","@talentoimpulsaconsulting"],
+    ];
+    const ws2=XLSX_LIB.utils.aoa_to_sheet(guia);
+    ws2["!cols"]=[{wch:30},{wch:26},{wch:38},{wch:38}];
+    XLSX_LIB.utils.book_append_sheet(wb,ws2,"Guía de Scoring");
+
+    const fname=`Diagnostico_PCA_${(clientName||"Cliente").replace(/\s+/g,"_")}_${today.replace(/\//g,"-")}.xlsx`;
+    XLSX_LIB.writeFile(wb,fname);
+    setExported(true);
+    setTimeout(()=>setExported(false),3000);
+  };
+
+  return (
+    <div style={{minHeight:"100vh",background:"#f0f4fa"}}>
+      {/* CLEAR MODAL */}
+      {showClear&&(
+        <div className="modal-overlay" onClick={()=>setShowClear(false)}>
+          <div className="modal" onClick={e=>e.stopPropagation()}>
+            <div style={{fontSize:40,textAlign:"center",marginBottom:14}}>🗂️</div>
+            <h2 style={{textAlign:"center",fontFamily:"'Cormorant Garamond',serif",color:"#1a2e5c",fontSize:22,marginBottom:10}}>¿Nueva auditoría?</h2>
+            <p style={{textAlign:"center",color:"#64748b",fontSize:13.5,lineHeight:1.65,marginBottom:26}}>
+              Se borrarán todos los datos del cliente actual para comenzar de cero.<br/>
+              <strong style={{color:"#374151"}}>Esta acción no se puede deshacer.</strong>
+            </p>
+            <div style={{display:"flex",gap:12}}>
+              <button onClick={()=>setShowClear(false)} style={{flex:1,padding:"11px",borderRadius:10,border:"1.5px solid #e2e8f0",background:"#fff",color:"#475569",fontSize:14,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
+              <button onClick={handleClear} style={{flex:1,padding:"11px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#dc2626,#b91c1c)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Sí, nueva planilla</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HEADER */}
+      <div style={{background:"linear-gradient(135deg,#1a2e5c 0%,#2E5090 65%,#3a6bc0 100%)",padding:"22px 28px 18px",position:"sticky",top:0,zIndex:100,boxShadow:"0 4px 24px rgba(46,80,144,.3)"}}>
+        <div style={{maxWidth:1000,margin:"0 auto"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
+            <div>
+              <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:3}}>
+                <div style={{width:3,height:25,background:"#D4AF37",borderRadius:2}}/>
+                <h1 style={{fontSize:21,fontWeight:700,color:"#fff",fontFamily:"'Cormorant Garamond',serif",letterSpacing:.3}}>Matriz de Auditoría PCA™</h1>
+              </div>
+              <p style={{fontSize:11.5,color:"#93b5e1",marginLeft:12}}>Diagnóstico de Productividad Consciente Aumentada · Talento Impulsa Consulting</p>
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:9}}>
+              <div style={{textAlign:"right",marginRight:2}}>
+                <div style={{fontSize:23,fontWeight:700,color:"#D4AF37",fontFamily:"'Cormorant Garamond',serif"}}>{completed}/25</div>
+                <div style={{fontSize:10,color:"#93b5e1"}}>completadas</div>
+              </div>
+              <button className="ghost-btn" onClick={()=>setShowClear(true)} style={{padding:"8px 13px",borderRadius:9,border:"1.5px solid rgba(255,255,255,.25)",background:"transparent",color:"rgba(255,255,255,.85)",fontSize:12,fontWeight:600}}>🗂️ Nueva</button>
+              <button className="ghost-btn" onClick={exportExcel} style={{padding:"9px 17px",borderRadius:9,border:"none",background:exported?"#22c55e":"#D4AF37",color:"#1a2e5c",fontSize:13,fontWeight:700,whiteSpace:"nowrap"}}>
+                {exported?"✓ Descargado":"⬇ Exportar Excel"}
+              </button>
+            </div>
+          </div>
+          <div style={{marginTop:11,height:3,background:"rgba(255,255,255,.15)",borderRadius:99}}>
+            <div style={{height:"100%",width:`${(completed/25)*100}%`,background:"#D4AF37",borderRadius:99,transition:"width .4s ease"}}/>
+          </div>
+        </div>
+      </div>
+
+      <div style={{maxWidth:1000,margin:"0 auto",padding:"24px 16px 80px"}}>
+
+        {/* DATOS CLIENTE */}
+        <div style={{background:"#fff",borderRadius:14,padding:"20px 24px",marginBottom:20,boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
+          <h2 style={{margin:"0 0 14px",fontSize:11.5,fontWeight:700,color:"#2E5090",textTransform:"uppercase",letterSpacing:1.2}}>Datos del Cliente</h2>
+          <div style={{display:"flex",gap:13,flexWrap:"wrap"}}>
+            {[{l:"Nombre / Empresa",v:clientName,s:setClientName,p:"Ej: Empresa S.A.",f:"1 1 200px"},
+              {l:"Industria",v:industry,s:setIndustry,p:"Ej: Tecnología",f:"1 1 140px"}].map(f=>(
+              <div key={f.l} style={{flex:f.f}}>
+                <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.5,textTransform:"uppercase",display:"block",marginBottom:5}}>{f.l}</label>
+                <input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.p} style={{width:"100%",padding:"9px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:14,color:"#1e293b"}}/>
+              </div>
+            ))}
+            <div style={{flex:"0 0 120px"}}>
+              <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.5,textTransform:"uppercase",display:"block",marginBottom:5}}>Fecha</label>
+              <input value={new Date().toLocaleDateString("es-AR")} disabled style={{width:"100%",padding:"9px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:14,color:"#94a3b8",background:"#fafafa"}}/>
+            </div>
+          </div>
+          <div style={{display:"flex",gap:13,flexWrap:"wrap",marginTop:12}}>
+            <div style={{flex:"1 1 180px"}}>
+              <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.5,textTransform:"uppercase",display:"block",marginBottom:5}}>📱 Celular</label>
+              <input value={clientPhone} onChange={e=>setClientPhone(e.target.value)} placeholder="Ej: +54 9 11 12345678" type="tel" style={{width:"100%",padding:"9px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:14,color:"#1e293b"}}/>
+            </div>
+            <div style={{flex:"2 1 220px"}}>
+              <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.5,textTransform:"uppercase",display:"block",marginBottom:5}}>✉️ Email</label>
+              <input value={clientEmail} onChange={e=>setClientEmail(e.target.value)} placeholder="Ej: contacto@empresa.com" type="email" style={{width:"100%",padding:"9px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:14,color:"#1e293b"}}/>
+            </div>
+          </div>
+        </div>
+
+        {/* NAV PILLS */}
+        <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:18}}>
+          {CATEGORIES.map(cat=>{
+            const filled=cat.questions.filter(q=>answers[q.id]?.puntaje).length;
+            return (
+              <a key={cat.id} href={`#cat-${cat.id}`} className="nav-pill" style={{
+                display:"flex",alignItems:"center",gap:6,padding:"7px 12px",
+                borderRadius:20,background:"#fff",border:`2px solid ${cat.color}1A`,
+                color:cat.color,fontSize:11.5,fontWeight:600,textDecoration:"none",whiteSpace:"nowrap",
+              }}>
+                <span>{cat.icon}</span><span>{cat.label}</span>
+                <span style={{background:cat.color,color:"#fff",borderRadius:99,padding:"1px 7px",fontSize:10.5}}>{filled}/5</span>
+              </a>
+            );
+          })}
+        </div>
+
+        {/* CATEGORÍAS */}
+        {CATEGORIES.map(cat=>(
+          <div key={cat.id} id={`cat-${cat.id}`} style={{marginBottom:24}}>
+            <div style={{background:cat.light,borderRadius:"14px 14px 0 0",padding:"13px 19px",display:"flex",alignItems:"center",gap:10,borderBottom:`3px solid ${cat.color}`}}>
+              <span style={{fontSize:19}}>{cat.icon}</span>
+              <div>
+                <h2 style={{fontSize:15,fontWeight:700,color:cat.color,fontFamily:"'Cormorant Garamond',serif"}}>{cat.label}</h2>
+                <p style={{fontSize:11,color:"#64748b"}}>Puntaje: {catScores[cat.id]}/25 · {cat.questions.filter(q=>answers[q.id]?.puntaje).length} de 5 respondidas</p>
+              </div>
+            </div>
+            <div style={{background:"#f8fafc",padding:"13px 4px 4px",borderRadius:"0 0 14px 14px",border:"1px solid #e2e8f0",borderTop:"none"}}>
+              {cat.questions.map(q=><QuestionCard key={q.id} question={q} catColor={cat.color} catLight={cat.light} answers={answers} onChange={handleChange}/>)}
+            </div>
+          </div>
+        ))}
+
+        {/* RESULTADOS */}
+        <div style={{background:"#fff",borderRadius:14,padding:"24px",marginBottom:18,boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
+          <h2 style={{margin:"0 0 18px",fontSize:16,fontWeight:700,color:"#1a2e5c",fontFamily:"'Cormorant Garamond',serif"}}>📊 Resultados del Diagnóstico</h2>
+          {CATEGORIES.map(cat=><ResultBar key={cat.id} label={`${cat.icon} ${cat.label}`} score={catScores[cat.id]} max={25}/>)}
+          <div style={{marginTop:16,padding:"13px 17px",borderRadius:10,background:totalBg,border:`2px solid ${totalTc}33`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
+            <span style={{fontSize:14,fontWeight:700,color:"#1e293b"}}>Puntaje Total</span>
+            <div style={{display:"flex",alignItems:"center",gap:12}}>
+              <span style={{fontSize:22,fontWeight:700,color:totalTc,fontFamily:"'Cormorant Garamond',serif"}}>{totalScore}/125</span>
+              <span style={{fontSize:12,fontWeight:700,color:totalTc}}>{totalDiag}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* CUELLOS AUTOMÁTICOS */}
+        {completed>=10 && reco ? (
+          <div className="fade-in" style={{background:"#fff",borderRadius:14,padding:"24px",marginBottom:18,boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
+            <h2 style={{margin:"0 0 16px",fontSize:16,fontWeight:700,color:"#1a2e5c",fontFamily:"'Cormorant Garamond',serif"}}>🎯 Principales Cuellos de Botella Detectados</h2>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {reco.bottlenecks.map((b,i)=>{
+                const bg2=b.pct<0.4?"#fef2f2":b.pct<0.7?"#fffbeb":"#f0fdf4";
+                const tc2=b.pct<0.4?"#dc2626":b.pct<0.7?"#d97706":"#16a34a";
+                return (
+                  <div key={i} style={{display:"flex",gap:11,alignItems:"flex-start",background:bg2,border:`1px solid ${tc2}33`,borderRadius:10,padding:"11px 13px"}}>
+                    <div style={{width:26,height:26,borderRadius:"50%",background:tc2,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,flexShrink:0}}>{i+1}</div>
+                    <div>
+                      <div style={{fontSize:12,fontWeight:700,color:tc2,marginBottom:3}}>{b.icon} {b.cat} — {Math.round(b.pct*100)}% eficiencia</div>
+                      <p style={{fontSize:12.5,color:"#374151",lineHeight:1.5,margin:0}}>{b.text}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : completed>=5&&completed<10 ? (
+          <div style={{background:"#f8fafc",borderRadius:14,padding:"18px 22px",marginBottom:18,border:"1.5px dashed #cbd5e1",textAlign:"center"}}>
+            <p style={{color:"#94a3b8",fontSize:13}}>Completá al menos 10 puntajes para ver el análisis automático y la recomendación de pack.</p>
+          </div>
+        ) : null}
+
+        {/* PACK RECOMENDADO */}
+        {reco && (
+          <div className="fade-in pulse-card" style={{background:reco.pack.bg,border:`2px solid ${reco.pack.color}33`,borderRadius:14,padding:"24px",marginBottom:18}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
+              <span style={{fontSize:28}}>{reco.pack.emoji}</span>
+              <div>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <h2 style={{fontSize:18,fontWeight:700,color:reco.pack.color,fontFamily:"'Cormorant Garamond',serif"}}>{reco.pack.name}</h2>
+                  <span style={{fontSize:10,fontWeight:700,background:reco.pack.color,color:"#fff",padding:"3px 10px",borderRadius:20}}>RECOMENDADO</span>
+                </div>
+                <div style={{fontSize:11,color:"#64748b",fontWeight:600}}>{reco.pack.tagline}</div>
+              </div>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,flexWrap:"wrap"}}>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:reco.pack.color,textTransform:"uppercase",letterSpacing:.5,marginBottom:7}}>¿Por qué este pack?</div>
+                <p style={{fontSize:13,color:"#374151",lineHeight:1.6,borderLeft:`3px solid ${reco.pack.color}`,paddingLeft:10,marginBottom:14,fontStyle:"italic"}}>{reco.reasoning}</p>
+                <div style={{background:reco.pack.color,color:"#fff",borderRadius:9,padding:"9px 14px",fontSize:12.5,fontWeight:600,textAlign:"center"}}>
+                  🎯 {reco.pack.outcome}
+                </div>
+              </div>
+              <div>
+                <div style={{fontSize:11,fontWeight:700,color:reco.pack.color,textTransform:"uppercase",letterSpacing:.5,marginBottom:7}}>Incluye</div>
+                <ul style={{listStyle:"none",padding:0,margin:0}}>
+                  {reco.pack.includes.map((item,i)=>(
+                    <li key={i} style={{display:"flex",gap:7,alignItems:"flex-start",marginBottom:6,fontSize:12.5,color:"#374151"}}>
+                      <span style={{color:reco.pack.color,flexShrink:0,marginTop:1}}>✓</span><span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* RECOMENDACIONES + NOTAS MANUALES */}
+        <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:20}}>
+          {reco&&(
+            <div style={{flex:"2 1 340px",background:"#fff",borderRadius:14,padding:"22px",boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
+              <h2 style={{margin:"0 0 13px",fontSize:15,fontWeight:700,color:"#1a2e5c",fontFamily:"'Cormorant Garamond',serif"}}>📝 Recomendaciones Personalizadas</h2>
+              <div style={{background:"#f8fafc",borderRadius:10,padding:"13px 15px",fontSize:13,color:"#374151",lineHeight:1.7,whiteSpace:"pre-line",border:"1px solid #e2e8f0"}}>{reco.recoText}</div>
+            </div>
+          )}
+          <div style={{flex:"1 1 240px",background:"#fff",borderRadius:14,padding:"22px",boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
+            <h2 style={{margin:"0 0 9px",fontSize:15,fontWeight:700,color:"#1a2e5c",fontFamily:"'Cormorant Garamond',serif"}}>✏️ Notas Adicionales</h2>
+            <p style={{fontSize:11.5,color:"#94a3b8",marginBottom:10}}>Contexto extra, próximos pasos, compromisos del cliente u otra información relevante para el informe.</p>
+            <textarea rows={7} value={manualNotes} onChange={e=>setManualNotes(e.target.value)}
+              placeholder="Ej: El cliente tiene una reunión de directorio en marzo y quiere presentar un plan de productividad. Se comprometió a implementar el pack antes de esa fecha. Mencionó que su principal dolor es la delegación al equipo..."
+              style={{width:"100%",padding:"11px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:12.5,resize:"vertical",color:"#1e293b",lineHeight:1.6}}/>
+          </div>
+        </div>
+
+        {/* BOTONES FINALES */}
+        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
+          <button className="ghost-btn" onClick={()=>setShowClear(true)} style={{padding:"11px 26px",borderRadius:11,border:"2px solid #e2e8f0",background:"#fff",color:"#64748b",fontSize:14,fontWeight:600}}>
+            🗂️ Nueva Planilla
+          </button>
+          <button className="ghost-btn" onClick={exportExcel} style={{padding:"12px 38px",borderRadius:11,border:"none",background:"linear-gradient(135deg,#1a2e5c,#2E5090)",color:"#fff",fontSize:14,fontWeight:700,boxShadow:"0 4px 20px rgba(46,80,144,.28)"}}>
+            ⬇ Exportar Diagnóstico Completo a Excel
+          </button>
+        </div>
+        <p style={{textAlign:"center",marginTop:9,fontSize:11,color:"#94a3b8"}}>
+          El Excel incluye diagnóstico completo · cuellos de botella · pack recomendado · recomendaciones personalizadas
+        </p>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
