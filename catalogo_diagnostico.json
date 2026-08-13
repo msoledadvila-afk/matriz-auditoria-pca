@@ -1,0 +1,130 @@
+{
+  "escalas": {
+    "frecuencia": ["Nunca", "Rara vez", "A veces", "Frecuentemente", "Siempre"],
+    "sinoparcial": ["No", "Parcial", "Sí"]
+  },
+  "categorias": [
+    {
+      "id": "tiempo",
+      "label": "Gestión del Tiempo",
+      "icono": "⏱",
+      "preguntas": [
+        {"id": "t1", "texto": "¿Cuántas horas por semana dedicás a responder emails?", "tipo": "open"},
+        {"id": "t2", "texto": "¿Cuántas reuniones semanales considerás improductivas?", "tipo": "open"},
+        {"id": "t3", "texto": "¿Tenés un sistema claro de priorización de tareas?", "tipo": "sinoparcial"},
+        {"id": "t4", "texto": "¿Con qué frecuencia te sentís abrumado/a por la cantidad de pendientes?", "tipo": "frecuencia"},
+        {"id": "t5", "texto": "¿Cuánto tiempo perdés buscando información dispersa (emails, docs, chats)?", "tipo": "open"}
+      ]
+    },
+    {
+      "id": "procesos",
+      "label": "Procesos Operativos",
+      "icono": "⚙️",
+      "preguntas": [
+        {"id": "p1", "texto": "¿Qué tareas repetitivas te consumen más tiempo cada semana?", "tipo": "open"},
+        {"id": "p2", "texto": "¿Tenés documentados tus procesos operativos clave?", "tipo": "sinoparcial"},
+        {"id": "p3", "texto": "¿Cuántas veces repetís la misma tarea de forma manual sin automatizar?", "tipo": "open"},
+        {"id": "p4", "texto": "¿Existen cuellos de botella claros que retrasan entregas?", "tipo": "open"},
+        {"id": "p5", "texto": "¿Con qué frecuencia tenés que rehacer trabajo por falta de claridad inicial?", "tipo": "frecuencia"}
+      ]
+    },
+    {
+      "id": "comunicacion",
+      "label": "Comunicación",
+      "icono": "💬",
+      "preguntas": [
+        {"id": "c1", "texto": "¿Cuánto tiempo dedicás por semana a redactar comunicados, emails o informes?", "tipo": "open"},
+        {"id": "c2", "texto": "¿Tenés plantillas o guías para comunicaciones frecuentes?", "tipo": "sinoparcial"},
+        {"id": "c3", "texto": "¿Con qué frecuencia tenés que reescribir comunicados por tono inadecuado?", "tipo": "frecuencia"},
+        {"id": "c4", "texto": "¿Recibís quejas por emails poco claros o mal redactados?", "tipo": "open"},
+        {"id": "c5", "texto": "¿Cuántos borradores descartados tenés porque no lográs expresar lo que querés?", "tipo": "open"}
+      ]
+    },
+    {
+      "id": "documental",
+      "label": "Gestión Documental",
+      "icono": "📂",
+      "preguntas": [
+        {"id": "d1", "texto": "¿Cuánto tiempo dedicás a leer y resumir documentos extensos?", "tipo": "open"},
+        {"id": "d2", "texto": "¿Tenés un sistema de archivo y búsqueda de documentos eficiente?", "tipo": "sinoparcial"},
+        {"id": "d3", "texto": "¿Con qué frecuencia necesitás releer documentos porque no hiciste una síntesis?", "tipo": "frecuencia"},
+        {"id": "d4", "texto": "¿Perdés tiempo estructurando información dispersa de múltiples fuentes?", "tipo": "open"},
+        {"id": "d5", "texto": "¿Tenés procesos claros para convertir datos en informes ejecutivos?", "tipo": "sinoparcial"}
+      ]
+    },
+    {
+      "id": "decisiones",
+      "label": "Toma de Decisiones",
+      "icono": "🎯",
+      "preguntas": [
+        {"id": "dec1", "texto": "¿Tenés criterios claros para delegar vs. hacer vos mismo/a?", "tipo": "sinoparcial"},
+        {"id": "dec2", "texto": "¿Cuántas decisiones operativas repetitivas tomás por semana que podrían sistematizarse?", "tipo": "open"},
+        {"id": "dec3", "texto": "¿Postergás decisiones por falta de información estructurada?", "tipo": "frecuencia"},
+        {"id": "dec4", "texto": "¿Tenés una matriz de prioridades clara para asignar tiempo a proyectos?", "tipo": "sinoparcial"},
+        {"id": "dec5", "texto": "¿Con qué frecuencia trabajás en lo urgente pero no en lo importante?", "tipo": "frecuencia"}
+      ]
+    }
+  ],
+  "packs": {
+    "autonomia": {
+      "emoji": "🚀",
+      "nombre": "Pack Autonomía PCA™",
+      "tagline": "Nivel Profesional Individual",
+      "descripcion": "Para profesionales que quieren implementar IA de forma segura y efectiva en su trabajo diario, recuperando 5-10 horas semanales.",
+      "incluye": [
+        "Diagnóstico PCA — Sesión 60 min + Matriz de Auditoría",
+        "Prompt Studio: 30 prompts validados en Canva para tu industria",
+        "Protocolo de Humanidad Digital — PDF guía de uso responsable",
+        "Sesión de Implementación Práctica (90 min con casos reales)",
+        "Kit de Seguimiento: 5 videos tutoriales + 1 video personalizado",
+        "Follow-up a los 15 días para ajustar y consolidar resultados"
+      ],
+      "resultado": "Ahorro estimado de 5 a 10 horas semanales desde la primera semana"
+    },
+    "equipo": {
+      "emoji": "👥",
+      "nombre": "Pack Digital Equipo",
+      "tagline": "Nivel Equipo / Organización",
+      "descripcion": "Para equipos que necesitan sistematizar su comunicación, documentación y procesos colaborativos con IA, sin perder criterio profesional.",
+      "incluye": [
+        "Diagnóstico PCA grupal con Matriz de Auditoría para el equipo",
+        "Diseño de protocolos de comunicación con IA por área",
+        "Biblioteca de prompts personalizada según funciones del equipo",
+        "Sesión de implementación grupal (2 hs con casos reales del equipo)",
+        "Protocolo de Humanidad Digital y seguridad de datos institucional",
+        "Seguimiento mensual con ajuste de sistemas durante 30 días"
+      ],
+      "resultado": "Equipos que trabajan con criterio, velocidad y coherencia"
+    },
+    "mentoria": {
+      "emoji": "🧭",
+      "nombre": "Mentoría Estratégica 1:1",
+      "tagline": "Nivel Liderazgo Consciente",
+      "descripcion": "Para líderes y directivos que necesitan rediseñar su arquitectura de trabajo: delegación inteligente, toma de decisiones y liderazgo con IA.",
+      "incluye": [
+        "Diagnóstico PCA ejecutivo — Matriz + entrevista en profundidad",
+        "Diseño del Sistema de Delegación Inteligente personalizado",
+        "Arquitectura de toma de decisiones con criterio aumentado",
+        "4 sesiones 1:1 de implementación (60 min c/u)",
+        "Protocolo CREF de instrucción IA personalizado para tu rol",
+        "Acompañamiento continuo con revisiones quincenales"
+      ],
+      "resultado": "Liderazgo estratégico sin carga operativa"
+    },
+    "institucional": {
+      "emoji": "🏛️",
+      "nombre": "Consultoría Institucional PCA™",
+      "tagline": "Nivel Transformación Organizacional",
+      "descripcion": "Para organizaciones que necesitan transformar su arquitectura de trabajo de forma sistémica, integrando IA en todos los niveles con responsabilidad y criterio.",
+      "incluye": [
+        "Diagnóstico organizacional completo con Matriz PCA por área",
+        "Diseño de sistemas de productividad replicables por nivel",
+        "Capacitación: operativo, táctico y estratégico",
+        "Protocolo de seguridad de datos institucional personalizado",
+        "Implementación por etapas con métricas de avance claras",
+        "Seguimiento y ajuste durante 90 días"
+      ],
+      "resultado": "Transformación digital consciente, sostenible y medible"
+    }
+  }
+}
