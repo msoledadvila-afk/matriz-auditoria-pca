@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diagnóstico PCA gratis · Talento Impulsa Consulting</title>
+<meta name="description" content="Descubrí en minutos dónde estás perdiendo tiempo y qué pack de Talento Impulsa te conviene, con nuestro diagnóstico conversacional PCA™.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --gold:#9A7B3D;
+  --gold-soft:#B8995A;
+  --gold-deep:#75582A;
+  --gold-luminous:#D4B062;
+  --cream:#EFE9DB;
+  --card:#FFFFFF;
+  --border:#C8C0B5;
+  --text:#1A1814;
+  --text-dim:#6E6859;
+  --font-body:'Outfit',sans-serif;
+  --font-italic:'Cormorant Garamond',serif;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:var(--font-body);
+  font-weight:300;
+  background:var(--cream);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:32px 16px 60px;
+}
+a{color:inherit}
+
+.top-link{
+  align-self:flex-start;
+  margin-bottom:22px;
+  font-size:14px;
+  color:var(--text-dim);
+  text-decoration:none;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+.top-link:hover{color:var(--gold-deep)}
+
+.header{
+  text-align:center;
+  max-width:560px;
+  margin-bottom:28px;
+}
+.header h1{
+  font-family:var(--font-italic);
+  font-style:italic;
+  font-weight:600;
+  font-size:32px;
+  color:var(--gold-deep);
+  margin-bottom:10px;
+}
+.header p{
+  font-size:15px;
+  color:var(--text-dim);
+  line-height:1.6;
+}
+
+.progress-wrap{
+  width:100%;
+  max-width:560px;
+  margin-bottom:14px;
+}
+.progress-track{
+  height:4px;
+  background:var(--border);
+  border-radius:99px;
+  overflow:hidden;
+}
+.progress-fill{
+  height:100%;
+  background:var(--gold-luminous);
+  border-radius:99px;
+  transition:width .4s var(--ease);
+  width:0%;
+}
+.progress-label{
+  font-size:11.5px;
+  color:var(--text-dim);
+  margin-top:6px;
+  text-align:right;
+}
+
+.chat-card{
+  width:100%;
+  max-width:560px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:0 12px 40px rgba(26,24,20,.08);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.messages{
+  flex:1;
+  min-height:320px;
+  max-height:52vh;
+  overflow-y:auto;
+  padding:22px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+}
+.messages::-webkit-scrollbar{width:5px}
+.messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
+
+.msg{
+  max-width:82%;
+  padding:11px 15px;
+  border-radius:14px;
+  font-size:14.5px;
+  line-height:1.55;
+  white-space:pre-line;
+}
+.msg.bot{
+  align-self:flex-start;
+  background:var(--cream);
+  border:1px solid var(--border);
+  border-bottom-left-radius:4px;
+  color:var(--text);
+}
+.msg.user{
+  align-self:flex-end;
+  background:var(--gold-deep);
+  color:#fff;
+  border-bottom-right-radius:4px;
+}
+.msg.typing{
+  align-self:flex-start;
+  background:var(--cream);
+  border:1px solid var(--border);
+  border-bottom-left-radius:4px;
+  color:var(--text-dim);
+  font-style:italic;
+}
+
+.input-row{
+  display:flex;
+  gap:10px;
+  padding:14px 16px;
+  border-top:1px solid var(--border);
+  background:var(--card);
+}
+.input-row input{
+  flex:1;
+  padding:11px 14px;
+  border-radius:10px;
+  border:1.5px solid var(--border);
+  font-family:var(--font-body);
+  font-size:14.5px;
+  color:var(--text);
+}
+.input-row input:focus{
+  outline:none;
+  border-color:var(--gold-soft);
+  box-shadow:0 0 0 3px rgba(154,123,61,.14);
+}
+.input-row button{
+  padding:0 20px;
+  border:none;
+  border-radius:10px;
+  background:var(--gold-deep);
+  color:#fff;
+  font-family:var(--font-body);
+  font-weight:600;
+  font-size:14px;
+  cursor:pointer;
+  transition:opacity .2s var(--ease);
+}
+.input-row button:disabled{opacity:.5;cursor:default}
+.input-row button:not(:disabled):hover{opacity:.88}
+
+.error-banner{
+  padding:11px 16px;
+  background:#FBEAEA;
+  color:#9C3B3B;
+  font-size:13px;
+  text-align:center;
+  border-top:1px solid #E8C7C7;
+}
+
+/* ---- resultado final ---- */
+.result{
+  width:100%;
+  max-width:560px;
+  margin-top:22px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+}
+.result-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:22px 24px;
+}
+.result-card h2{
+  font-family:var(--font-italic);
+  font-style:italic;
+  font-weight:600;
+  font-size:20px;
+  color:var(--gold-deep);
+  margin-bottom:12px;
+}
+.bottleneck{
+  display:flex;
+  gap:12px;
+  padding:12px 0;
+  border-top:1px solid var(--border);
+}
+.bottleneck:first-of-type{border-top:none}
+.bottleneck .icon{font-size:20px}
+.bottleneck .label{font-weight:600;font-size:13.5px;margin-bottom:3px}
+.bottleneck .text{font-size:13px;color:var(--text-dim);line-height:1.55}
+
+.pack-card{
+  background:linear-gradient(135deg,var(--gold-deep),var(--gold));
+  color:#fff;
+  border-radius:16px;
+  padding:26px 24px;
+}
+.pack-card .tag{
+  font-size:11px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  opacity:.85;
+  margin-bottom:6px;
+}
+.pack-card h2{
+  font-family:var(--font-italic);
+  font-style:italic;
+  font-weight:600;
+  font-size:24px;
+  margin-bottom:10px;
+}
+.pack-card p{
+  font-size:14px;
+  line-height:1.65;
+  opacity:.95;
+}
+
+.cta-row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin-top:6px;
+}
+.cta-btn{
+  padding:13px 28px;
+  border-radius:11px;
+  font-size:14.5px;
+  font-weight:600;
+  text-decoration:none;
+  transition:opacity .2s var(--ease), transform .2s var(--ease);
+}
+.cta-btn.primary{background:var(--gold-deep);color:#fff}
+.cta-btn.secondary{background:transparent;color:var(--gold-deep);border:1.5px solid var(--border)}
+.cta-btn:hover{opacity:.88;transform:translateY(-1px)}
+</style>
+</head>
+<body>
+
+<a href="index.html" class="top-link">← Volver al sitio</a>
+
+<div class="header">
+  <h1>Diagnóstico PCA™</h1>
+  <p>Una charla de unos minutos con nuestra asistente para identificar dónde estás perdiendo más tiempo, y qué pack de Talento Impulsa te conviene.</p>
+</div>
+
+<div class="progress-wrap" id="progress-wrap" style="display:none">
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-label" id="progress-label"></div>
+</div>
+
+<div class="chat-card" id="chat-card">
+  <div class="messages" id="messages"></div>
+  <div class="input-row" id="input-row">
+    <input type="text" id="input" placeholder="Escribí tu respuesta..." autocomplete="off">
+    <button id="send-btn">Enviar</button>
+  </div>
+</div>
+
+<div class="result" id="result" style="display:none"></div>
+
+<script>
+const API_URL = "https://pca-diagnostico-api.onrender.com/chat";
+
+// La sesión vive solo en memoria mientras dura esta visita a la página.
+// Si el visitante refresca a mitad de la entrevista, arranca de nuevo:
+// la API exige un "mensaje" no vacío para continuar una sesión existente,
+// así que no hay forma de "retomar" sin repreguntar desde el inicio.
+let sessionId = null;
+
+const messagesEl = document.getElementById("messages");
+const inputEl = document.getElementById("input");
+const sendBtn = document.getElementById("send-btn");
+const inputRow = document.getElementById("input-row");
+const chatCard = document.getElementById("chat-card");
+const resultEl = document.getElementById("result");
+const progressWrap = document.getElementById("progress-wrap");
+const progressFill = document.getElementById("progress-fill");
+const progressLabel = document.getElementById("progress-label");
+
+function addMessage(text, who) {
+  const div = document.createElement("div");
+  div.className = "msg " + who;
+  div.textContent = text;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+  return div;
+}
+
+function showTyping() {
+  const div = document.createElement("div");
+  div.className = "msg typing";
+  div.textContent = "escribiendo...";
+  div.id = "typing-indicator";
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById("typing-indicator");
+  if (el) el.remove();
+}
+
+function showError(text) {
+  let banner = document.getElementById("error-banner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.className = "error-banner";
+    banner.id = "error-banner";
+    chatCard.appendChild(banner);
+  }
+  banner.textContent = text;
+}
+
+function clearError() {
+  const banner = document.getElementById("error-banner");
+  if (banner) banner.remove();
+}
+
+function setBusy(busy) {
+  inputEl.disabled = busy;
+  sendBtn.disabled = busy;
+}
+
+async function callChat(mensaje) {
+  clearError();
+  setBusy(true);
+  showTyping();
+
+  const body = { session_id: sessionId, mensaje: mensaje || null };
+
+  try {
+    const resp = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = await resp.json();
+    hideTyping();
+
+    if (!resp.ok) {
+      showError(data.error || "Ocurrió un error, intentá de nuevo en unos segundos.");
+      setBusy(false);
+      return;
+    }
+
+    sessionId = data.session_id;
+
+    addMessage(data.mensaje, "bot");
+
+    if (data.terminado) {
+      finalizarEntrevista(data.resultado);
+      return;
+    }
+
+    if (data.progreso) {
+      progressWrap.style.display = "block";
+      const pct = (data.progreso.respondidas / data.progreso.total) * 100;
+      progressFill.style.width = pct + "%";
+      progressLabel.textContent = `${data.progreso.respondidas} de ${data.progreso.total} preguntas`;
+    }
+
+    setBusy(false);
+    inputEl.focus();
+  } catch (err) {
+    hideTyping();
+    showError("No pudimos conectar con el servidor. Revisá tu conexión e intentá de nuevo.");
+    setBusy(false);
+  }
+}
+
+function finalizarEntrevista(resultado) {
+  inputRow.style.display = "none";
+  progressWrap.style.display = "none";
+
+  resultEl.style.display = "flex";
+  resultEl.innerHTML = "";
+
+  // Cuellos de botella
+  const bottlenecksCard = document.createElement("div");
+  bottlenecksCard.className = "result-card";
+  let bottlenecksHtml = "<h2>Principales cuellos de botella</h2>";
+  resultado.cuellos_de_botella.forEach(cb => {
+    bottlenecksHtml += `
+      <div class="bottleneck">
+        <div class="icon">${cb.icono}</div>
+        <div>
+          <div class="label">${cb.categoria} — ${Math.round(cb.pct * 100)}% eficiencia</div>
+          <div class="text">${cb.texto}</div>
+        </div>
+      </div>`;
+  });
+  bottlenecksCard.innerHTML = bottlenecksHtml;
+  resultEl.appendChild(bottlenecksCard);
+
+  // Pack recomendado
+  const pack = resultado.pack;
+  const packCard = document.createElement("div");
+  packCard.className = "pack-card";
+  packCard.innerHTML = `
+    <div class="tag">Recomendado para vos</div>
+    <h2>${pack.emoji} ${pack.nombre}</h2>
+    <p>${resultado.texto_recomendacion.replace(/\n/g, "<br><br>")}</p>
+  `;
+  resultEl.appendChild(packCard);
+
+  // CTA
+  const ctaRow = document.createElement("div");
+  ctaRow.className = "cta-row";
+  ctaRow.innerHTML = `
+    <a class="cta-btn primary" href="index.html#contacto">Quiero avanzar con este pack</a>
+    <a class="cta-btn secondary" href="index.html">Volver al sitio</a>
+  `;
+  resultEl.appendChild(ctaRow);
+}
+
+sendBtn.addEventListener("click", () => {
+  const val = inputEl.value.trim();
+  if (!val) return;
+  addMessage(val, "user");
+  inputEl.value = "";
+  callChat(val);
+});
+
+inputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendBtn.click();
+});
+
+// Arranque: siempre inicia una entrevista nueva al cargar la página.
+callChat(null);
+</script>
+</body>
+</html>

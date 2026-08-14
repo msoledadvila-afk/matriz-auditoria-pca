@@ -1,597 +1,1411 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Matriz de Auditoría PCA™ | Talento Impulsa Consulting</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <style>
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{scroll-behavior:smooth}
-    body{background:#f0f4fa;font-family:'DM Sans',sans-serif}
-    input,textarea{font-family:'DM Sans',sans-serif}
-    textarea:focus,input:focus{border-color:#2E5090!important;box-shadow:0 0 0 3px rgba(46,80,144,.12)!important;outline:none}
-    ::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:99px}
-    .nav-pill:hover{background:#f0f5ff!important;transform:translateY(-1px)}
-    .nav-pill{transition:all .15s ease}
-    .score-btn{transition:all .15s;cursor:pointer}.score-btn:hover{transform:scale(1.08)}
-    .ghost-btn{transition:all .2s;cursor:pointer}.ghost-btn:hover{opacity:.88;transform:translateY(-1px)}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-    .fade-in{animation:fadeIn .4s ease forwards}
-    @keyframes pulse{0%,100%{box-shadow:0 4px 20px rgba(46,80,144,.15)}50%{box-shadow:0 6px 28px rgba(46,80,144,.3)}}
-    .pulse-card{animation:pulse 2.5s ease-in-out infinite}
-    .modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,.6);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
-    .modal{background:#fff;border-radius:20px;padding:36px;max-width:460px;width:100%;box-shadow:0 24px 60px rgba(0,0,0,.25)}
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Talento Impulsa Consulting · Productividad con conciencia</title>
+<meta name="description" content="Diseñamos sistemas de productividad consciente con IA para profesionales, pymes y consultoras. Modelo PCA™ — Productividad Consciente Aumentada.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+/* ============ TOKENS ============ */
+:root{
+  /* paleta marca */
+  --gold:#9A7B3D;
+  --gold-soft:#B8995A;
+  --gold-deep:#75582A;
+  --gold-luminous:#D4B062;
+
+  /* fondos */
+  --cream:#EFE9DB;
+  --stone:#DDD8D4;
+  --warm:#E3D7D2;
+  --card:#FFFFFF;
+  --border:#C8C0B5;
+
+  /* texto */
+  --text:#1A1814;
+  --text-dim:#6E6859;
+
+  /* tierra (jerarquías) */
+  --tier-1:#E3D7D2;
+  --tier-2:#BFABA2;
+  --tier-3:#8C7D7A;
+  --tier-4:#684B45;
+  --tier-5:#3B3935;
+
+  /* dark hero */
+  --dark-bg:#0A0A0A;
+  --dark-surface:#1A1612;
+  --teal:#1F4A52;
+
+  /* tipo */
+  --font-body:'Outfit',sans-serif;
+  --font-display:'Outfit',sans-serif;
+  --font-italic:'Cormorant Garamond',serif;
+
+  /* espacio */
+  --container:1180px;
+  --pad-section-d:120px;
+  --pad-section-m:72px;
+
+  /* motion */
+  --ease:cubic-bezier(.4,0,.2,1);
+  --ease-soft:cubic-bezier(.34,1.56,.64,1);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--font-body);
+  font-weight:300;
+  background:var(--cream);
+  color:var(--text);
+  line-height:1.6;
+  font-size:17px;
+  letter-spacing:.005em;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+a{color:inherit;text-decoration:none;transition:opacity .25s var(--ease)}
+img{max-width:100%;display:block}
+
+.container{max-width:var(--container);margin:0 auto;padding:0 32px}
+@media (max-width:768px){.container{padding:0 24px}}
+
+/* ============ NAV ============ */
+.nav{
+  position:fixed;top:0;left:0;right:0;
+  z-index:100;
+  padding:18px 0;
+  background:rgba(239,233,219,.85);
+  backdrop-filter:blur(14px);
+  -webkit-backdrop-filter:blur(14px);
+  border-bottom:1px solid transparent;
+  transition:all .3s var(--ease);
+}
+.nav.scrolled{
+  border-bottom-color:rgba(200,192,181,.5);
+  padding:12px 0;
+}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;gap:32px}
+.brand{display:flex;align-items:center;gap:14px;font-weight:500;letter-spacing:.02em}
+.brand-mark{
+  width:48px;height:42px;
+  display:grid;place-items:center;
+  flex-shrink:0;
+}
+.brand-mark img{
+  width:100%;height:100%;
+  object-fit:contain;
+  display:block;
+}
+.brand-text{font-size:15px}
+.brand-text em{font-style:italic;font-family:var(--font-italic);font-weight:400;color:var(--gold-deep);letter-spacing:0}
+.brand-text small{display:block;font-size:10px;color:var(--text-dim);letter-spacing:.18em;text-transform:uppercase;margin-top:1px}
+
+.nav-links{display:flex;align-items:center;gap:36px;font-size:14px;font-weight:400}
+.nav-links a:hover{color:var(--gold-deep)}
+.nav-cta{
+  padding:9px 18px;
+  background:var(--text);
+  color:var(--cream)!important;
+  border-radius:999px;
+  font-size:13px;
+  letter-spacing:.02em;
+  font-weight:500;
+}
+.nav-cta:hover{background:var(--gold-deep);transform:translateY(-1px)}
+.nav-cta-secondary{
+  padding:8px 17px;
+  background:transparent;
+  color:var(--gold-deep)!important;
+  border:1.5px solid var(--gold-soft);
+  border-radius:999px;
+  font-size:13px;
+  letter-spacing:.02em;
+  font-weight:500;
+}
+.nav-cta-secondary:hover{background:var(--gold-luminous);color:var(--text)!important;transform:translateY(-1px)}
+.menu-toggle{display:none;background:none;border:none;cursor:pointer;padding:8px}
+.menu-toggle span{display:block;width:22px;height:1.5px;background:var(--text);margin:5px 0;transition:all .3s var(--ease)}
+
+@media(max-width:880px){
+  .nav-links{
+    position:fixed;top:64px;left:0;right:0;
+    flex-direction:column;
+    background:var(--cream);
+    padding:32px;
+    gap:24px;
+    transform:translateY(-110%);
+    transition:transform .35s var(--ease);
+    border-bottom:1px solid var(--border);
+  }
+  .nav-links.open{transform:translateY(0)}
+  .menu-toggle{display:block}
+  .menu-toggle.open span:nth-child(1){transform:translateY(6.5px) rotate(45deg)}
+  .menu-toggle.open span:nth-child(2){opacity:0}
+  .menu-toggle.open span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg)}
+}
+
+/* ============ HERO ============ */
+.hero{
+  position:relative;
+  min-height:100vh;
+  background:var(--dark-bg);
+  color:#fff;
+  padding:140px 0 80px;
+  overflow:hidden;
+  display:flex;align-items:center;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at 20% 30%,rgba(31,74,82,.4) 0%,transparent 50%),
+    radial-gradient(ellipse at 80% 70%,rgba(212,176,98,.15) 0%,transparent 60%),
+    var(--dark-bg);
+}
+.hero-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(212,176,98,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(212,176,98,.04) 1px,transparent 1px);
+  background-size:60px 60px;
+  mask-image:radial-gradient(ellipse at center,black 30%,transparent 70%);
+  -webkit-mask-image:radial-gradient(ellipse at center,black 30%,transparent 70%);
+}
+.hero-particles{position:absolute;inset:0;pointer-events:none}
+.particle{
+  position:absolute;
+  width:4px;height:4px;
+  background:var(--gold-luminous);
+  border-radius:50%;
+  opacity:.3;
+  animation:float 8s ease-in-out infinite;
+  box-shadow:0 0 20px rgba(212,176,98,.4);
+}
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-20px)}
+}
+
+.hero-inner{position:relative;z-index:1;width:100%}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  font-size:11px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--gold-luminous);
+  margin-bottom:32px;
+  font-weight:500;
+  opacity:0;animation:reveal 1s var(--ease) .2s forwards;
+}
+.hero-eyebrow::before{content:'';width:30px;height:1px;background:var(--gold-luminous)}
+
+.hero-title{
+  font-family:var(--font-display);
+  font-size:clamp(44px,7.5vw,108px);
+  font-weight:300;
+  line-height:.98;
+  letter-spacing:-.025em;
+  margin-bottom:36px;
+  max-width:14ch;
+  opacity:0;animation:reveal 1.2s var(--ease) .35s forwards;
+}
+.hero-title em{
+  font-style:italic;
+  font-family:var(--font-italic);
+  font-weight:400;
+  color:var(--gold-luminous);
+  letter-spacing:0;
+}
+.hero-sub{
+  font-size:clamp(17px,1.5vw,21px);
+  font-weight:300;
+  color:rgba(255,255,255,.7);
+  max-width:62ch;
+  margin-bottom:48px;
+  line-height:1.55;
+  opacity:0;animation:reveal 1.2s var(--ease) .5s forwards;
+}
+.hero-actions{
+  display:flex;gap:16px;flex-wrap:wrap;
+  opacity:0;animation:reveal 1.2s var(--ease) .65s forwards;
+}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:16px 30px;
+  border-radius:999px;
+  font-size:14px;font-weight:500;
+  letter-spacing:.02em;
+  cursor:pointer;border:none;
+  transition:all .3s var(--ease);
+  text-align:center;
+}
+.btn-primary{
+  background:var(--gold-luminous);
+  color:var(--dark-bg);
+}
+.btn-primary:hover{background:#fff;transform:translateY(-2px);box-shadow:0 14px 30px rgba(212,176,98,.25)}
+.btn-secondary{
+  background:transparent;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.25);
+}
+.btn-secondary:hover{border-color:var(--gold-luminous);color:var(--gold-luminous)}
+.btn-arrow{transition:transform .3s var(--ease)}
+.btn:hover .btn-arrow{transform:translateX(4px)}
+
+.hero-scroll{
+  position:absolute;bottom:32px;left:50%;transform:translateX(-50%);
+  font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+  color:rgba(255,255,255,.5);
+  display:flex;flex-direction:column;align-items:center;gap:12px;
+}
+.hero-scroll-line{
+  width:1px;height:40px;
+  background:linear-gradient(to bottom,var(--gold-luminous),transparent);
+  animation:scroll-pulse 2s ease-in-out infinite;
+}
+@keyframes scroll-pulse{
+  0%,100%{opacity:.3;transform:scaleY(.8)}
+  50%{opacity:1;transform:scaleY(1)}
+}
+@keyframes reveal{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+
+/* ============ TESIS / PUNTO PARTIDA ============ */
+.tesis{
+  padding:var(--pad-section-d) 0;
+  background:var(--cream);
+  position:relative;
+}
+@media(max-width:768px){.tesis{padding:var(--pad-section-m) 0}}
+
+.section-eyebrow{
+  font-size:11px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--gold-deep);
+  margin-bottom:24px;
+  font-weight:500;
+  display:flex;align-items:center;gap:10px;
+}
+.section-eyebrow::before{content:'';width:24px;height:1px;background:var(--gold)}
+
+.tesis-grid{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start}
+@media(max-width:880px){.tesis-grid{grid-template-columns:1fr;gap:48px}}
+
+.tesis-title{
+  font-family:var(--font-display);
+  font-size:clamp(34px,4.5vw,56px);
+  font-weight:300;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  margin-bottom:32px;
+}
+.tesis-title em{
+  font-family:var(--font-italic);
+  font-style:italic;
+  color:var(--gold-deep);
+  font-weight:400;
+}
+.tesis-lead{font-size:19px;color:var(--text-dim);margin-bottom:24px;line-height:1.6}
+
+.symptoms{display:grid;gap:1px;background:var(--border);border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.symptom{
+  padding:20px 24px;
+  background:var(--card);
+  display:flex;align-items:center;gap:16px;
+  font-size:15px;
+  transition:all .3s var(--ease);
+}
+.symptom:hover{background:var(--warm);transform:translateX(4px)}
+.symptom-num{
+  font-family:var(--font-italic);
+  font-style:italic;
+  color:var(--gold);
+  font-size:20px;
+  font-weight:600;
+  min-width:24px;
+}
+.tesis-claim{
+  margin-top:40px;
+  padding:32px;
+  background:var(--tier-5);
+  color:var(--cream);
+  border-radius:8px;
+  font-family:var(--font-italic);
+  font-style:italic;
+  font-size:22px;
+  line-height:1.4;
+  position:relative;
+}
+.tesis-claim::before{
+  content:'"';
+  position:absolute;top:8px;left:20px;
+  font-size:80px;
+  color:var(--gold-luminous);
+  opacity:.3;
+  line-height:1;
+}
+.tesis-claim strong{font-weight:600;color:var(--gold-luminous);font-style:normal;font-family:var(--font-body)}
+
+/* ============ POSTURA / DIFERENCIAL ============ */
+.postura{
+  padding:var(--pad-section-d) 0;
+  background:var(--tier-5);
+  color:#e6e0d2;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.postura::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(circle at 30% 20%,rgba(212,176,98,.08) 0%,transparent 40%),
+    radial-gradient(circle at 70% 80%,rgba(31,74,82,.15) 0%,transparent 40%);
+}
+.postura-inner{position:relative;z-index:1;max-width:880px;margin:0 auto}
+.postura .section-eyebrow{color:var(--gold-luminous);justify-content:center}
+.postura .section-eyebrow::before{background:var(--gold-luminous)}
+
+.postura-title{
+  font-family:var(--font-display);
+  font-size:clamp(28px,3.8vw,46px);
+  font-weight:300;
+  line-height:1.15;
+  letter-spacing:-.015em;
+  margin-bottom:48px;
+}
+.postura-pair{
+  display:grid;grid-template-columns:1fr 1fr;
+  gap:1px;
+  background:rgba(212,176,98,.2);
+  border-radius:6px;overflow:hidden;
+  margin:48px 0;
+}
+@media(max-width:680px){.postura-pair{grid-template-columns:1fr}}
+.postura-side{
+  padding:40px 32px;
+  background:var(--tier-5);
+  text-align:left;
+}
+.postura-side small{
+  display:block;
+  font-size:11px;letter-spacing:.28em;text-transform:uppercase;
+  color:rgba(230,224,210,.5);
+  margin-bottom:16px;
+}
+.postura-side p{font-size:18px;line-height:1.5;color:rgba(230,224,210,.9);font-weight:300}
+.postura-side.bad small{color:rgba(230,224,210,.4)}
+.postura-side.good small{color:var(--gold-luminous)}
+
+.postura-claim{
+  font-family:var(--font-italic);
+  font-style:italic;
+  font-size:clamp(24px,3vw,36px);
+  font-weight:400;
+  color:var(--gold-luminous);
+  line-height:1.3;
+}
+.postura-claim strong{
+  font-family:var(--font-body);
+  font-style:normal;
+  font-weight:500;
+  color:#fff;
+  display:block;
+  font-size:.7em;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  margin-top:16px;
+  opacity:.7;
+}
+
+/* ============ MÉTODO PCA ============ */
+.metodo{
+  padding:var(--pad-section-d) 0;
+  background:var(--stone);
+  position:relative;
+}
+.metodo-head{text-align:center;max-width:760px;margin:0 auto 80px}
+.metodo-head .section-eyebrow{justify-content:center}
+.metodo-title{
+  font-family:var(--font-display);
+  font-size:clamp(36px,5vw,62px);
+  font-weight:300;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  margin-bottom:24px;
+}
+.metodo-title em{font-family:var(--font-italic);font-style:italic;color:var(--gold-deep);font-weight:400}
+.metodo-sub{font-size:19px;color:var(--text-dim);font-weight:300}
+
+.pillars{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+  position:relative;
+}
+@media(max-width:880px){.pillars{grid-template-columns:1fr}}
+
+.pillar{
+  background:var(--card);
+  padding:48px 36px;
+  border-radius:8px;
+  border:1px solid var(--border);
+  position:relative;
+  transition:all .4s var(--ease);
+  overflow:hidden;
+}
+.pillar::before{
+  content:'';position:absolute;
+  top:0;left:0;right:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--gold-soft),var(--gold-deep));
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .5s var(--ease);
+}
+.pillar:hover{transform:translateY(-6px);box-shadow:0 24px 50px rgba(26,24,20,.08);border-color:var(--gold-soft)}
+.pillar:hover::before{transform:scaleX(1)}
+.pillar-num{
+  font-family:var(--font-italic);
+  font-style:italic;
+  font-size:64px;
+  font-weight:400;
+  color:var(--gold);
+  line-height:1;
+  margin-bottom:20px;
+  display:block;
+}
+.pillar-title{
+  font-size:22px;
+  font-weight:600;
+  margin-bottom:16px;
+  letter-spacing:-.01em;
+}
+.pillar-title small{
+  display:block;
+  font-size:11px;
+  font-weight:400;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--gold-deep);
+  margin-bottom:8px;
+}
+.pillar-text{color:var(--text-dim);font-size:16px;line-height:1.6}
+
+/* ============ NIVELES / SERVICIOS ============ */
+.servicios{
+  padding:var(--pad-section-d) 0;
+  background:var(--cream);
+}
+.serv-head{max-width:780px;margin:0 auto 80px;text-align:center}
+.serv-head .section-eyebrow{justify-content:center}
+.serv-title{
+  font-family:var(--font-display);
+  font-size:clamp(36px,5vw,62px);
+  font-weight:300;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  margin-bottom:24px;
+}
+.serv-title em{font-family:var(--font-italic);font-style:italic;color:var(--gold-deep);font-weight:400}
+.serv-lead{font-size:19px;color:var(--text-dim);font-weight:300}
+
+.tier-tabs{
+  display:flex;gap:8px;justify-content:center;margin-bottom:48px;
+  flex-wrap:wrap;
+  padding:6px;background:var(--card);border-radius:999px;
+  width:fit-content;margin-left:auto;margin-right:auto;
+  border:1px solid var(--border);
+}
+.tier-tab{
+  padding:11px 24px;
+  background:transparent;border:none;cursor:pointer;
+  font-family:var(--font-body);font-size:13px;font-weight:500;
+  letter-spacing:.04em;color:var(--text-dim);
+  border-radius:999px;
+  transition:all .3s var(--ease);
+}
+.tier-tab.active{background:var(--text);color:var(--cream)}
+.tier-tab:not(.active):hover{color:var(--text)}
+
+.tier-panel{display:none;animation:fadeIn .5s var(--ease)}
+.tier-panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+.tier-card{
+  display:grid;grid-template-columns:1fr 1.2fr;gap:0;
+  background:var(--card);
+  border-radius:12px;overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:0 14px 40px rgba(26,24,20,.05);
+}
+@media(max-width:880px){.tier-card{grid-template-columns:1fr}}
+
+.tier-side{
+  padding:56px 48px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;overflow:hidden;
+}
+.tier-side[data-tier="prof"]{background:var(--tier-1)}
+.tier-side[data-tier="team"]{background:var(--tier-2);color:#fff}
+.tier-side[data-tier="org"]{background:var(--tier-4);color:#fff}
+.tier-side[data-tier="cons"]{background:var(--tier-5);color:var(--cream)}
+
+.tier-side::before{
+  content:'';position:absolute;
+  width:200px;height:200px;
+  border-radius:50%;
+  bottom:-80px;right:-80px;
+  background:radial-gradient(circle,rgba(212,176,98,.15) 0%,transparent 70%);
+}
+
+.tier-tag{
+  font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+  font-weight:500;
+  margin-bottom:24px;
+  display:inline-block;
+  padding:6px 12px;
+  background:rgba(255,255,255,.4);
+  border-radius:4px;
+  width:fit-content;
+}
+.tier-side[data-tier="team"] .tier-tag,
+.tier-side[data-tier="org"] .tier-tag,
+.tier-side[data-tier="cons"] .tier-tag{background:rgba(255,255,255,.15)}
+
+.tier-name{
+  font-family:var(--font-display);
+  font-size:clamp(32px,4vw,48px);
+  font-weight:400;
+  line-height:1;
+  margin-bottom:16px;
+  letter-spacing:-.02em;
+}
+.tier-name em{font-family:var(--font-italic);font-style:italic}
+.tier-pitch{font-size:17px;line-height:1.5;opacity:.85;margin-bottom:32px;font-weight:300}
+.tier-target{
+  border-top:1px solid currentColor;
+  padding-top:20px;
+  font-size:13px;
+  letter-spacing:.04em;
+  opacity:.75;
+}
+.tier-target strong{display:block;margin-bottom:6px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;font-size:11px;opacity:.8}
+
+.tier-content{padding:56px 48px}
+.tier-content h4{
+  font-size:13px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--gold-deep);font-weight:500;
+  margin-bottom:20px;
+}
+.tier-product{
+  margin-bottom:32px;
+  padding-bottom:32px;
+  border-bottom:1px solid var(--border);
+}
+.tier-product:last-child{border-bottom:none;padding-bottom:0;margin-bottom:0}
+.tier-product-name{
+  font-family:var(--font-display);
+  font-size:22px;
+  font-weight:500;
+  margin-bottom:8px;
+  letter-spacing:-.01em;
+}
+.tier-product-name em{color:var(--gold-deep);font-family:var(--font-italic);font-style:italic;font-weight:400}
+.tier-product-desc{font-size:15px;color:var(--text-dim);margin-bottom:14px}
+.tier-includes{
+  display:flex;flex-wrap:wrap;gap:8px;
+}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 12px;
+  background:var(--warm);
+  border-radius:999px;
+  font-size:12px;
+  color:var(--text);
+  letter-spacing:.01em;
+  font-weight:400;
+}
+.chip::before{content:'';width:4px;height:4px;background:var(--gold);border-radius:50%}
+
+/* ============ CIFRAS / RESULTADO ============ */
+.cifras{
+  padding:96px 0;
+  background:var(--warm);
+  position:relative;
+}
+.cifras-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:32px;
+}
+@media(max-width:880px){.cifras-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.cifras-grid{grid-template-columns:1fr}}
+
+.cifra{
+  text-align:center;
+  padding:24px 0;
+}
+.cifra-num{
+  font-family:var(--font-display);
+  font-size:clamp(48px,6vw,72px);
+  font-weight:300;
+  color:var(--gold-deep);
+  line-height:1;
+  letter-spacing:-.03em;
+  margin-bottom:8px;
+}
+.cifra-num em{font-family:var(--font-italic);font-style:italic;font-size:.7em;color:var(--gold)}
+.cifra-label{
+  font-size:13px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--text-dim);font-weight:500;
+}
+
+/* ============ FUNDADORA ============ */
+.founder{
+  padding:var(--pad-section-d) 0;
+  background:var(--cream);
+}
+.founder-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;
+}
+@media(max-width:880px){.founder-grid{grid-template-columns:1fr;gap:48px}}
+
+.founder-img-wrap{
+  position:relative;aspect-ratio:1/1;max-width:480px;
+}
+.founder-img-frame{
+  width:100%;height:100%;
+  border-radius:12px;
+  position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--tier-2),var(--tier-4));
+  box-shadow:0 24px 50px rgba(26,24,20,.12);
+}
+.founder-img-frame img{
+  width:100%;height:100%;
+  object-fit:cover;
+  object-position:center 28%;
+  display:block;
+  filter:saturate(.95) contrast(1.02);
+}
+.founder-img-frame::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 60%,rgba(26,24,20,.18) 100%);
+  pointer-events:none;
+}
+.founder-stamp{
+  position:absolute;bottom:-20px;right:-20px;
+  width:120px;height:120px;
+  background:var(--gold-luminous);
+  border-radius:50%;
+  display:grid;place-items:center;
+  text-align:center;
+  font-family:var(--font-italic);font-style:italic;
+  color:var(--text);font-weight:600;font-size:13px;line-height:1.2;
+  padding:14px;
+  box-shadow:0 14px 30px rgba(154,123,61,.3);
+  transform:rotate(-8deg);
+}
+.founder-stamp strong{display:block;font-size:24px;font-family:var(--font-display);font-style:normal;letter-spacing:-.02em;font-weight:600}
+
+.founder-content .section-eyebrow{margin-bottom:20px}
+.founder-name{
+  font-family:var(--font-display);
+  font-size:clamp(36px,4.5vw,54px);
+  font-weight:300;
+  line-height:1.05;
+  letter-spacing:-.02em;
+  margin-bottom:14px;
+}
+.founder-name em{font-family:var(--font-italic);font-style:italic;color:var(--gold-deep);font-weight:400}
+.founder-role{
+  font-size:13px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold-deep);font-weight:500;
+  margin-bottom:28px;
+}
+.founder-bio{font-size:17px;color:var(--text);margin-bottom:18px;line-height:1.65}
+.founder-bio em{font-family:var(--font-italic);font-style:italic;color:var(--gold-deep)}
+
+.founder-cred{
+  margin-top:32px;display:flex;gap:12px;flex-wrap:wrap;
+}
+.cred{
+  padding:8px 14px;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-size:12px;color:var(--text-dim);
+  letter-spacing:.02em;
+}
+
+/* ============ CITA FINAL ============ */
+.cita{
+  padding:var(--pad-section-d) 0;
+  background:var(--dark-bg);
+  color:#fff;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+}
+.cita::before{
+  content:'';position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse at center,rgba(31,74,82,.3) 0%,transparent 60%),
+    radial-gradient(circle at 80% 20%,rgba(212,176,98,.1) 0%,transparent 50%);
+}
+.cita-inner{position:relative;z-index:1;max-width:920px;margin:0 auto;padding:0 32px}
+.cita-quote{
+  font-family:var(--font-italic);
+  font-style:italic;
+  font-size:clamp(28px,4.5vw,52px);
+  font-weight:400;
+  line-height:1.2;
+  letter-spacing:-.01em;
+}
+.cita-quote em{
+  color:var(--gold-luminous);
+  font-style:normal;
+  font-family:var(--font-body);
+  font-weight:500;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  font-size:.4em;
+  display:block;
+  margin-top:32px;
+  opacity:.85;
+}
+.cita-quote strong{
+  display:block;font-style:normal;font-family:var(--font-body);
+  font-weight:300;color:#fff;
+  font-size:1em;line-height:1.15;
+  margin-top:8px;
+}
+.cita-quote strong span{color:var(--gold-luminous);font-family:var(--font-italic);font-style:italic;font-weight:400}
+
+/* ============ CTA FINAL ============ */
+.cta{
+  padding:var(--pad-section-d) 0;
+  background:var(--cream);
+  position:relative;
+}
+.cta-card{
+  background:var(--tier-5);
+  color:var(--cream);
+  border-radius:16px;
+  padding:80px 64px;
+  text-align:center;
+  position:relative;
+  overflow:hidden;
+  max-width:1000px;margin:0 auto;
+}
+@media(max-width:680px){.cta-card{padding:56px 32px}}
+.cta-card::before{
+  content:'';position:absolute;
+  width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(212,176,98,.18),transparent 70%);
+  top:-100px;right:-100px;
+}
+.cta-card::after{
+  content:'';position:absolute;
+  width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(31,74,82,.25),transparent 70%);
+  bottom:-80px;left:-80px;
+}
+.cta-inner{position:relative;z-index:1}
+.cta-eyebrow{
+  font-size:11px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--gold-luminous);font-weight:500;
+  margin-bottom:24px;
+}
+.cta-title{
+  font-family:var(--font-display);
+  font-size:clamp(32px,4.5vw,52px);
+  font-weight:300;
+  line-height:1.1;
+  letter-spacing:-.02em;
+  margin-bottom:20px;
+  max-width:18ch;margin-left:auto;margin-right:auto;
+}
+.cta-title em{font-family:var(--font-italic);font-style:italic;color:var(--gold-luminous);font-weight:400}
+.cta-text{font-size:18px;color:rgba(230,224,210,.8);margin-bottom:40px;font-weight:300;max-width:52ch;margin-left:auto;margin-right:auto}
+
+.cta-channels{
+  display:flex;gap:16px;justify-content:center;flex-wrap:wrap;
+  margin-top:36px;
+}
+.channel{
+  display:inline-flex;align-items:center;gap:10px;
+  padding:14px 20px;
+  background:rgba(212,176,98,.12);
+  border:1px solid rgba(212,176,98,.3);
+  border-radius:999px;
+  font-size:14px;
+  color:var(--cream);
+  transition:all .3s var(--ease);
+}
+.channel:hover{background:var(--gold-luminous);color:var(--text);border-color:var(--gold-luminous);transform:translateY(-2px)}
+.channel svg{width:18px;height:18px}
+
+/* ============ FOOTER ============ */
+.footer{
+  background:var(--text);
+  color:var(--cream);
+  padding:64px 0 32px;
+}
+.footer-grid{
+  display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:48px;margin-bottom:48px;
+}
+@media(max-width:680px){.footer-grid{grid-template-columns:1fr;gap:32px}}
+.footer-brand{font-family:var(--font-display);font-size:24px;font-weight:300;line-height:1.3;margin-bottom:14px}
+.footer-brand em{font-family:var(--font-italic);font-style:italic;color:var(--gold-luminous)}
+.footer-text{font-size:14px;color:rgba(239,233,219,.6);max-width:38ch;line-height:1.6}
+.footer-h{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--gold-luminous);margin-bottom:16px;font-weight:500}
+.footer-list{list-style:none}
+.footer-list li{margin-bottom:10px;font-size:14px;color:rgba(239,233,219,.7)}
+.footer-list a:hover{color:var(--gold-luminous)}
+.footer-bottom{
+  padding-top:32px;border-top:1px solid rgba(239,233,219,.1);
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;
+  font-size:12px;color:rgba(239,233,219,.5);
+  letter-spacing:.04em;
+}
+
+/* ============ REVEAL ON SCROLL ============ */
+.reveal{opacity:0;transform:translateY(28px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.reveal.in{opacity:1;transform:translateY(0)}
+</style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-const { useState, useMemo, useCallback } = React;
-const XLSX_LIB = window.XLSX;
 
-const CATEGORIES = [
-  {id:"tiempo",label:"Gestión del Tiempo",color:"#2E5090",light:"#EEF3FB",icon:"⏱",questions:[
-    {id:"t1",text:"¿Cuántas horas por semana dedica a responder emails?",type:"open"},
-    {id:"t2",text:"¿Cuántas reuniones semanales considera improductivas?",type:"open"},
-    {id:"t3",text:"¿Tiene un sistema claro de priorización de tareas?",type:"sinoparcial"},
-    {id:"t4",text:"¿Con qué frecuencia se siente abrumado por la cantidad de pendientes?",type:"frecuencia"},
-    {id:"t5",text:"¿Cuánto tiempo pierde buscando información dispersa (emails, docs, chats)?",type:"open"},
-  ]},
-  {id:"procesos",label:"Procesos Operativos",color:"#1a6e4a",light:"#EEF7F2",icon:"⚙️",questions:[
-    {id:"p1",text:"¿Qué tareas repetitivas consumen más tiempo cada semana?",type:"open"},
-    {id:"p2",text:"¿Tiene documentados sus procesos operativos clave?",type:"sinoparcial"},
-    {id:"p3",text:"¿Cuántas veces repite la misma tarea de forma manual sin automatizar?",type:"open"},
-    {id:"p4",text:"¿Existen cuellos de botella claros que retrasan entregas?",type:"open"},
-    {id:"p5",text:"¿Con qué frecuencia tiene que rehacer trabajo por falta de claridad inicial?",type:"frecuencia"},
-  ]},
-  {id:"comunicacion",label:"Comunicación",color:"#7B3F9E",light:"#F5EEFC",icon:"💬",questions:[
-    {id:"c1",text:"¿Cuánto tiempo dedica por semana a redactar comunicados, emails o informes?",type:"open"},
-    {id:"c2",text:"¿Tiene plantillas o guías para comunicaciones frecuentes?",type:"sinoparcial"},
-    {id:"c3",text:"¿Con qué frecuencia tiene que reescribir comunicados por tono inadecuado?",type:"frecuencia"},
-    {id:"c4",text:"¿Recibe quejas por emails poco claros o mal redactados?",type:"open"},
-    {id:"c5",text:"¿Cuántos borradores descartados tiene porque no logra expresar lo que quiere?",type:"open"},
-  ]},
-  {id:"documental",label:"Gestión Documental",color:"#A0521C",light:"#FDF3EC",icon:"📂",questions:[
-    {id:"d1",text:"¿Cuánto tiempo dedica a leer y resumir documentos extensos?",type:"open"},
-    {id:"d2",text:"¿Tiene un sistema de archivo y búsqueda de documentos eficiente?",type:"sinoparcial"},
-    {id:"d3",text:"¿Con qué frecuencia necesita releer documentos porque no hizo síntesis?",type:"frecuencia"},
-    {id:"d4",text:"¿Pierde tiempo estructurando información dispersa de múltiples fuentes?",type:"open"},
-    {id:"d5",text:"¿Tiene procesos claros para convertir datos en informes ejecutivos?",type:"sinoparcial"},
-  ]},
-  {id:"decisiones",label:"Toma de Decisiones",color:"#B5860D",light:"#FDF8EC",icon:"🎯",questions:[
-    {id:"dec1",text:"¿Tiene criterios claros para delegar vs hacer usted mismo?",type:"sinoparcial"},
-    {id:"dec2",text:"¿Cuántas decisiones operativas repetitivas toma por semana que podrían sistematizarse?",type:"open"},
-    {id:"dec3",text:"¿Posterga decisiones por falta de información estructurada?",type:"frecuencia"},
-    {id:"dec4",text:"¿Tiene una matriz de prioridades clara para asignar tiempo a proyectos?",type:"sinoparcial"},
-    {id:"dec5",text:"¿Con qué frecuencia trabaja en urgente pero no importante?",type:"frecuencia"},
-  ]},
-];
-
-const FRECUENCIA = ["Nunca","Rara vez","A veces","Frecuentemente","Siempre"];
-const SINOPARCIAL = ["No","Parcial","Sí"];
-const SCORE_LABELS = ["","Crítico","Débil","Medio","Bueno","Óptimo"];
-
-const PACKS = {
-  autonomia:{emoji:"🚀",name:"Pack Autonomía PCA™",tagline:"Nivel Profesional Individual",color:"#2E5090",bg:"#EEF3FB",
-    description:"Para profesionales que quieren implementar IA de forma segura y efectiva en su trabajo diario, recuperando 5-10 horas semanales.",
-    includes:["Diagnóstico PCA — Sesión 60 min + Matriz de Auditoría","Prompt Studio: 30 prompts validados en Canva para tu industria","Protocolo de Humanidad Digital — PDF guía de uso responsable","Sesión de Implementación Práctica (90 min con casos reales)","Kit de Seguimiento: 5 videos tutoriales + 1 video personalizado","Follow-up a los 15 días para ajustar y consolidar resultados"],
-    outcome:"Ahorro estimado de 5 a 10 horas semanales desde la primera semana"},
-  equipo:{emoji:"👥",name:"Pack Digital Equipo",tagline:"Nivel Equipo / Organización",color:"#1a6e4a",bg:"#EEF7F2",
-    description:"Para equipos que necesitan sistematizar su comunicación, documentación y procesos colaborativos con IA, sin perder criterio profesional.",
-    includes:["Diagnóstico PCA grupal con Matriz de Auditoría para el equipo","Diseño de protocolos de comunicación con IA por área","Biblioteca de prompts personalizada según funciones del equipo","Sesión de implementación grupal (2 hs con casos reales del equipo)","Protocolo de Humanidad Digital y seguridad de datos institucional","Seguimiento mensual con ajuste de sistemas durante 30 días"],
-    outcome:"Equipos que trabajan con criterio, velocidad y coherencia"},
-  mentoria:{emoji:"🧭",name:"Mentoría Estratégica 1:1",tagline:"Nivel Liderazgo Consciente",color:"#7B3F9E",bg:"#F5EEFC",
-    description:"Para líderes y directivos que necesitan rediseñar su arquitectura de trabajo: delegación inteligente, toma de decisiones y liderazgo con IA.",
-    includes:["Diagnóstico PCA ejecutivo — Matriz + entrevista en profundidad","Diseño del Sistema de Delegación Inteligente personalizado","Arquitectura de toma de decisiones con criterio aumentado","4 sesiones 1:1 de implementación (60 min c/u)","Protocolo CREF de instrucción IA personalizado para tu rol","Acompañamiento continuo con revisiones quincenales"],
-    outcome:"Liderazgo estratégico sin carga operativa"},
-  institucional:{emoji:"🏛️",name:"Consultoría Institucional PCA™",tagline:"Nivel Transformación Organizacional",color:"#A0521C",bg:"#FDF3EC",
-    description:"Para organizaciones que necesitan transformar su arquitectura de trabajo de forma sistémica, integrando IA en todos los niveles con responsabilidad y criterio.",
-    includes:["Diagnóstico organizacional completo con Matriz PCA por área","Diseño de sistemas de productividad replicables por nivel","Capacitación: operativo, táctico y estratégico","Protocolo de seguridad de datos institucional personalizado","Implementación por etapas con métricas de avance claras","Seguimiento y ajuste durante 90 días"],
-    outcome:"Transformación digital consciente, sostenible y medible"},
-};
-
-function getRecommendation(catScores, totalPct) {
-  const pcts = Object.fromEntries(Object.entries(catScores).map(([k,v]) => [k,v/25]));
-  const críticas = Object.entries(pcts).filter(([,v]) => v<0.4).map(([k]) => k);
-  const mejorables = Object.entries(pcts).filter(([,v]) => v>=0.4&&v<0.7).map(([k]) => k);
-
-  let packKey, reasoning;
-  if (totalPct < 0.35) {
-    packKey = "institucional";
-    reasoning = `El diagnóstico revela una situación crítica transversal (${críticas.length} de 5 áreas en estado crítico). Se requiere una intervención sistémica que reordene la arquitectura de trabajo desde sus cimientos, en todos los niveles de la organización.`;
-  } else if (críticas.includes("decisiones") && (críticas.includes("procesos") || críticas.includes("tiempo"))) {
-    packKey = "mentoria";
-    reasoning = "El perfil muestra dificultades estructurales en toma de decisiones combinadas con problemas de procesos o tiempo. Esto indica que el problema no es solo de herramientas sino de arquitectura de liderazgo: el sistema de delegación y los criterios de priorización necesitan ser rediseñados.";
-  } else if ((pcts.comunicacion < 0.55 || críticas.includes("comunicacion")) && (pcts.documental < 0.55 || críticas.includes("documental"))) {
-    packKey = "equipo";
-    reasoning = "Los cuellos de botella principales están en comunicación y gestión documental — áreas que típicamente impactan a equipos completos más que a individuos aislados. La solución requiere sistematizar flujos colaborativos y protocolos de trabajo conjunto.";
-  } else {
-    packKey = "autonomia";
-    reasoning = completed < 25
-      ? "Con las respuestas registradas hasta ahora, el perfil apunta a oportunidades claras de optimización individual. Con el sistema y los prompts correctos, podés recuperar entre 5 y 10 horas semanales de forma inmediata."
-      : totalPct < 0.7
-      ? "El diagnóstico identifica oportunidades claras de optimización individual en las áreas con menor puntaje. Con el sistema correcto, podés recuperar entre 5 y 10 horas semanales desde la primera semana de implementación."
-      : "Tenés una base sólida. Aún así, existen áreas puntuales que, al optimizarse con IA de forma estratégica, pueden multiplicar tu capacidad de trabajo estratégico y reducir la fricción operativa restante.";
-  }
-
-  const pack = PACKS[packKey];
-
-  const sorted = Object.entries(pcts).sort(([,a],[,b]) => a-b);
-  const msgs = {
-    tiempo:`Gestión del tiempo: Se detecta pérdida significativa de horas en tareas operativas y búsqueda de información dispersa. Con IA, estos procesos pueden reducirse en un 60-70%.`,
-    procesos:`Procesos operativos: Existen tareas repetitivas sin sistematizar y falta de documentación que genera retrabajo constante. La automatización inteligente puede liberar horas de trabajo manual semanal.`,
-    comunicacion:`Comunicación: La redacción manual y la falta de plantillas consumen tiempo valioso. Con un sistema de prompts validados, la producción de comunicados puede reducirse de horas a minutos.`,
-    documental:`Gestión documental: La información dispersa y la falta de síntesis generan fricción operativa y decisiones demoradas. Un sistema de procesamiento de documentos con IA puede cambiar esto radicalmente.`,
-    decisiones:`Toma de decisiones: La ausencia de criterios claros de delegación y priorización impacta en la eficiencia del liderazgo. Sistematizar estas decisiones es el paso que libera mayor capacidad estratégica.`,
-  };
-
-  const bottlenecks = sorted.slice(0,3).map(([catId,pct]) => {
-    const cat = CATEGORIES.find(c => c.id===catId);
-    return {cat:cat.label, icon:cat.icon, pct, text:msgs[catId]};
-  });
-
-  const packTexts = {
-    autonomia:`Con el ${pack.name}, implementaremos un sistema personalizado que ataca directamente estos cuellos de botella. A través de prompts validados, protocolos de delegación inteligente y sesiones de implementación práctica, podés recuperar entre 5 y 10 horas semanales que hoy estás perdiendo en operativa.`,
-    equipo:`El ${pack.name} está diseñado para sistematizar exactamente los flujos donde están los mayores cuellos de botella detectados. Construiremos protocolos de trabajo colaborativo con IA, una biblioteca de prompts por área y un sistema de comunicación y documentación que funcione sin depender de la improvisación.`,
-    mentoria:`La ${pack.name} es el camino para rediseñar la arquitectura de tu liderazgo. En las sesiones 1:1 trabajaremos el Sistema de Delegación Inteligente PCA™, criterios claros de toma de decisiones y la integración de IA en los momentos estratégicos de tu rol, sin perder el control ni la humanidad.`,
-    institucional:`La ${pack.name} es la respuesta adecuada para una transformación de este alcance. Trabajaremos por etapas: primero ordenamos la arquitectura de cada área, luego sistematizamos procesos por nivel (operativo, táctico, estratégico) y garantizamos la sostenibilidad del cambio con métricas y seguimiento durante 90 días.`,
-  };
-
-  const levelLabel = totalPct<0.4?"crítico que requiere intervención urgente":totalPct<0.7?"con potencial de mejora significativo":"con base sólida y oportunidades de optimización";
-  const recoText = `El diagnóstico muestra un perfil ${levelLabel}. Las áreas con mayor oportunidad de mejora son: ${bottlenecks.map(b=>b.cat.toLowerCase()).join(", ")}.\n\n${packTexts[packKey]}\n\nResultado esperado: ${pack.outcome}.`;
-
-  return {pack, packKey, reasoning, bottlenecks, recoText};
-}
-
-let completed = 0;
-
-function ScoreBtn({value,selected,color,onClick}) {
-  return (
-    <button className="score-btn" onClick={()=>onClick(value)} style={{
-      width:50,padding:"7px 0",borderRadius:8,border:selected?`2px solid ${color}`:"2px solid #e2e8f0",
-      background:selected?color:"#fff",color:selected?"#fff":"#64748b",fontWeight:700,
-      boxShadow:selected?`0 2px 8px ${color}44`:"none",
-      display:"flex",flexDirection:"column",alignItems:"center",gap:2,fontFamily:"'DM Sans',sans-serif",
-    }}>
-      <span style={{fontSize:17}}>{value}</span>
-      <span style={{fontSize:8.5,opacity:.85}}>{SCORE_LABELS[value]}</span>
+<!-- ============ NAV ============ -->
+<nav class="nav" id="nav">
+  <div class="container nav-inner">
+    <a href="#" class="brand" aria-label="Talento Impulsa Consulting">
+      <div class="brand-mark"><img src="logo-icon.png" alt=""></div>
+      <div class="brand-text">Talento <em>Impulsa</em><small>Consulting</small></div>
+    </a>
+    <div class="nav-links" id="nav-links">
+      <a href="#tesis">Tesis</a>
+      <a href="#metodo">Método PCA™</a>
+      <a href="#servicios">Servicios</a>
+      <a href="#fundadora">Fundadora</a>
+      <a href="diagnostico.html" class="nav-cta-secondary">Probá tu diagnóstico gratis</a>
+      <a href="#contacto" class="nav-cta">Conversemos</a>
+    </div>
+    <button class="menu-toggle" id="menu-toggle" aria-label="Menú">
+      <span></span><span></span><span></span>
     </button>
-  );
-}
+  </div>
+</nav>
 
-function QuestionCard({question,catColor,catLight,answers,onChange}) {
-  const ans = answers[question.id]||{};
-  return (
-    <div style={{background:"#fff",borderRadius:12,padding:"15px 17px",marginBottom:11,
-      border:"1px solid #e8edf5",borderLeft:`4px solid ${catColor}`,boxShadow:"0 1px 4px rgba(0,0,0,0.05)"}}>
-      <p style={{margin:"0 0 11px",fontSize:14,color:"#1e293b",lineHeight:1.55,fontWeight:500}}>{question.text}</p>
-      <div style={{display:"flex",gap:11,flexWrap:"wrap",alignItems:"flex-start"}}>
-        <div style={{flex:"1 1 210px",minWidth:170}}>
-          <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.6,textTransform:"uppercase"}}>Respuesta</label>
-          {question.type==="frecuencia"?(
-            <div style={{display:"flex",gap:5,flexWrap:"wrap",marginTop:6}}>
-              {FRECUENCIA.map(opt=>(
-                <button key={opt} onClick={()=>onChange(question.id,"respuesta",opt)} style={{
-                  padding:"4px 9px",borderRadius:20,cursor:"pointer",fontSize:11.5,fontWeight:600,
-                  transition:"all .12s",fontFamily:"'DM Sans',sans-serif",
-                  border:ans.respuesta===opt?`2px solid ${catColor}`:"1.5px solid #e2e8f0",
-                  background:ans.respuesta===opt?catLight:"#fff",color:ans.respuesta===opt?catColor:"#64748b",
-                }}>{opt}</button>
-              ))}
-            </div>
-          ):question.type==="sinoparcial"?(
-            <div style={{display:"flex",gap:7,marginTop:6}}>
-              {SINOPARCIAL.map(opt=>(
-                <button key={opt} onClick={()=>onChange(question.id,"respuesta",opt)} style={{
-                  padding:"5px 16px",borderRadius:20,cursor:"pointer",fontSize:12,fontWeight:700,
-                  transition:"all .12s",fontFamily:"'DM Sans',sans-serif",
-                  border:ans.respuesta===opt?`2px solid ${catColor}`:"1.5px solid #e2e8f0",
-                  background:ans.respuesta===opt?catColor:"#fff",color:ans.respuesta===opt?"#fff":"#64748b",
-                }}>{opt}</button>
-              ))}
-            </div>
-          ):(
-            <textarea rows={2} value={ans.respuesta||""} onChange={e=>onChange(question.id,"respuesta",e.target.value)}
-              placeholder="Escribí la respuesta del cliente..." style={{
-                width:"100%",marginTop:6,padding:"7px 10px",borderRadius:8,border:"1.5px solid #e2e8f0",
-                fontSize:13,resize:"vertical",color:"#1e293b",fontFamily:"'DM Sans',sans-serif"}}/>
-          )}
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-particles" id="particles"></div>
+  <div class="container hero-inner">
+    <div class="hero-eyebrow">Modelo PCA™ · Productividad Consciente Aumentada</div>
+    <h1 class="hero-title">Productividad <em>con conciencia</em></h1>
+    <p class="hero-sub">Diseñamos sistemas de productividad consciente para profesionales independientes, pymes y consultoras que buscan integrar Inteligencia Artificial sin perder criterio, liderazgo ni la huella humana del trabajo.</p>
+    <div class="hero-actions">
+      <a href="#metodo" class="btn btn-primary">Explorar el método <span class="btn-arrow">→</span></a>
+      <a href="#servicios" class="btn btn-secondary">Ver servicios</a>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="hero-scroll-line"></div>
+  </div>
+</section>
+
+<!-- ============ TESIS / DOLOR ============ -->
+<section class="tesis" id="tesis">
+  <div class="container">
+    <div class="tesis-grid">
+      <div class="reveal">
+        <div class="section-eyebrow">El punto de partida</div>
+        <h2 class="tesis-title">La transformación digital <em>no empieza</em> en la herramienta.</h2>
+        <p class="tesis-lead">Profesionales y pymes incorporan IA sin un sistema claro. El resultado es predecible y costoso: la tecnología amplifica el desorden en lugar de resolverlo.</p>
+        <div class="tesis-claim">
+          <strong>La IA no es el problema.</strong>
+          La improvisación sí. Un sistema, también, puede serlo.
         </div>
-        <div style={{flexShrink:0}}>
-          <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.6,textTransform:"uppercase"}}>Puntaje</label>
-          <div style={{display:"flex",gap:5,marginTop:6}}>
-            {[1,2,3,4,5].map(v=><ScoreBtn key={v} value={v} selected={ans.puntaje===v} color={catColor} onClick={val=>onChange(question.id,"puntaje",val)}/>)}
+      </div>
+      <div class="reveal">
+        <div class="symptoms">
+          <div class="symptom"><span class="symptom-num">i.</span><span>Sobrecarga mental crónica y multitasking sin foco.</span></div>
+          <div class="symptom"><span class="symptom-num">ii.</span><span>Procesos desordenados que ningún software ordena.</span></div>
+          <div class="symptom"><span class="symptom-num">iii.</span><span>Delegación improvisada a la IA, sin criterio.</span></div>
+          <div class="symptom"><span class="symptom-num">iv.</span><span>Automatización ciega que multiplica errores.</span></div>
+          <div class="symptom"><span class="symptom-num">v.</span><span>Equipos confundidos sobre qué confiar a la máquina.</span></div>
+          <div class="symptom"><span class="symptom-num">vi.</span><span>Datos sensibles compartidos sin protocolo.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ POSTURA DIFERENCIAL ============ -->
+<section class="postura">
+  <div class="container postura-inner">
+    <div class="section-eyebrow">Nuestra postura diferencial</div>
+    <h2 class="postura-title">Mientras muchos hablan de automatizar procesos, nosotros trabajamos sobre la <em style="font-family:'Cormorant Garamond';font-style:italic;color:var(--gold-luminous)">arquitectura del trabajo</em>.</h2>
+
+    <div class="postura-pair">
+      <div class="postura-side bad">
+        <small>Sin sistema</small>
+        <p>La tecnología amplifica el desorden, replica errores y vuelve invisible la pérdida de criterio.</p>
+      </div>
+      <div class="postura-side good">
+        <small>Con sistema</small>
+        <p>La tecnología amplifica la claridad, libera tiempo estratégico y protege el juicio humano.</p>
+      </div>
+    </div>
+
+    <p class="postura-claim">
+      No enseñamos herramientas.
+      <strong>Diseñamos estructuras</strong>
+    </p>
+  </div>
+</section>
+
+<!-- ============ MÉTODO PCA ============ -->
+<section class="metodo" id="metodo">
+  <div class="container">
+    <div class="metodo-head reveal">
+      <div class="section-eyebrow">Nuestro método</div>
+      <h2 class="metodo-title">Modelo PCA™ — Productividad <em>Consciente Aumentada</em></h2>
+      <p class="metodo-sub">Un marco propio, replicable y auditable, para integrar Inteligencia Artificial con liderazgo, criterio y responsabilidad. Tres pilares que sostienen toda nuestra implementación.</p>
+    </div>
+
+    <div class="pillars">
+      <div class="pillar reveal">
+        <span class="pillar-num">i.</span>
+        <h3 class="pillar-title"><small>Pilar 01 — Estructura</small>Sistema</h3>
+        <p class="pillar-text">Diseñamos arquitecturas replicables de trabajo. Mapeamos cuellos de botella, clasificamos información por sensibilidad y dejamos por escrito qué se delega, qué se valida y qué se decide.</p>
+      </div>
+      <div class="pillar reveal">
+        <span class="pillar-num">ii.</span>
+        <h3 class="pillar-title"><small>Pilar 02 — Ejecución</small>Delegación inteligente</h3>
+        <p class="pillar-text">La IA ejecuta. El humano decide. Implementamos protocolos para que la tecnología potencie el criterio sin reemplazarlo, con trazabilidad y puntos de control humano (HITL).</p>
+      </div>
+      <div class="pillar reveal">
+        <span class="pillar-num">iii.</span>
+        <h3 class="pillar-title"><small>Pilar 03 — Sostenibilidad</small>Liderazgo consciente</h3>
+        <p class="pillar-text">Formamos líderes capaces de dirigir la tecnología sin perder la esencia humana ni la seguridad de los datos. Productividad que se sostiene cuando nos vamos.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SERVICIOS / NIVELES ============ -->
+<section class="servicios" id="servicios">
+  <div class="container">
+    <div class="serv-head reveal">
+      <div class="section-eyebrow">Nuestros servicios</div>
+      <h2 class="serv-title">Implementamos PCA™ en <em>cuatro niveles</em></h2>
+      <p class="serv-lead">Cada nivel resuelve un escenario distinto, con la misma metodología y el mismo Protocolo de Humanidad Digital.</p>
+    </div>
+
+    <div class="tier-tabs reveal" role="tablist">
+      <button class="tier-tab active" data-tab="prof" role="tab">Profesional</button>
+      <button class="tier-tab" data-tab="team" role="tab">Equipo</button>
+      <button class="tier-tab" data-tab="org" role="tab">Institucional</button>
+      <button class="tier-tab" data-tab="cons" role="tab">Consultoras</button>
+    </div>
+
+    <!-- PROFESIONAL -->
+    <div class="tier-panel active" id="panel-prof">
+      <div class="tier-card">
+        <div class="tier-side" data-tier="prof">
+          <div>
+            <span class="tier-tag">Nivel 01 · Profesional</span>
+            <h3 class="tier-name">Pack <em>Autonomía</em> PCA™</h3>
+            <p class="tier-pitch">Para profesionales independientes que pasan horas probando herramientas sin saber cuál es la correcta. Implementación rápida, criterio incluido.</p>
+          </div>
+          <div class="tier-target">
+            <strong>Para quién</strong>
+            Consultores, profesionales liberales, freelancers y mandos medios que quieren resultados en 48–72 horas, no en seis meses.
           </div>
         </div>
-        <div style={{flex:"1 1 130px",minWidth:120}}>
-          <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.6,textTransform:"uppercase"}}>Notas</label>
-          <textarea rows={2} value={ans.notas||""} onChange={e=>onChange(question.id,"notas",e.target.value)}
-            placeholder="Anotaciones internas..." style={{
-              width:"100%",marginTop:6,padding:"7px 9px",borderRadius:8,border:"1.5px dashed #cbd5e1",
-              fontSize:11.5,resize:"vertical",color:"#475569",background:"#fafbfd",fontFamily:"'DM Sans',sans-serif"}}/>
+        <div class="tier-content">
+          <h4>Qué incluye</h4>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Diagnóstico <em>PCA</em></h5>
+            <p class="tier-product-desc">Sesión de 60 min + Matriz de Auditoría para identificar dónde se pierde el tiempo y qué procesos son delegables.</p>
+            <div class="tier-includes">
+              <span class="chip">Sesión 60 min</span>
+              <span class="chip">Matriz de auditoría</span>
+              <span class="chip">Mapa de cuellos de botella</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Prompt Studio</h5>
+            <p class="tier-product-desc">30 protocolos C.R.E.F. listos para usar — el método exclusivo para obtener resultados profesionales de la IA, no respuestas genéricas.</p>
+            <div class="tier-includes">
+              <span class="chip">30 prompts curados</span>
+              <span class="chip">Protocolo C.R.E.F.</span>
+              <span class="chip">Acceso permanente</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Protocolo de <em>Humanidad Digital</em></h5>
+            <p class="tier-product-desc">Guía PDF que clasifica información, define semáforos de seguridad y promueve la curaduría humana sobre toda salida de IA.</p>
+            <div class="tier-includes">
+              <span class="chip">Semáforo de seguridad</span>
+              <span class="chip">Curaduría profesional</span>
+              <span class="chip">Ética y privacidad</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Implementación + seguimiento</h5>
+            <p class="tier-product-desc">Sesión práctica de 90 min con casos reales, 5 videos tutoriales personalizados y follow-up a los 15 días para ajustar.</p>
+            <div class="tier-includes">
+              <span class="chip">Sesión 90 min</span>
+              <span class="chip">5 videos + 1 personalizado</span>
+              <span class="chip">Follow-up 15 días</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  );
-}
 
-function ResultBar({label,score,max}) {
-  const pct = max>0?score/max:0;
-  const status = pct<0.4?"🔴 CRÍTICO":pct<0.7?"🟡 MEJORABLE":"🟢 BIEN";
-  const bg = pct<0.4?"#fee2e2":pct<0.7?"#fef3c7":"#dcfce7";
-  const tc = pct<0.4?"#dc2626":pct<0.7?"#d97706":"#16a34a";
-  const bar = pct<0.4?"#ef4444":pct<0.7?"#f59e0b":"#22c55e";
-  return (
-    <div style={{marginBottom:12}}>
-      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-        <span style={{fontSize:12.5,fontWeight:600,color:"#1e293b"}}>{label}</span>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{fontSize:11.5,color:"#64748b"}}>{score}/{max}</span>
-          <span style={{fontSize:10.5,fontWeight:700,padding:"2px 9px",borderRadius:20,background:bg,color:tc}}>{status}</span>
+    <!-- EQUIPO -->
+    <div class="tier-panel" id="panel-team">
+      <div class="tier-card">
+        <div class="tier-side" data-tier="team">
+          <div>
+            <span class="tier-tag">Nivel 02 · Equipo</span>
+            <h3 class="tier-name">Arquitectura <em>de Equipos</em></h3>
+            <p class="tier-pitch">Para departamentos que necesitan estandarizar productividad sin perder identidad. Diseño a medida con biblioteca de prompts corporativa.</p>
+          </div>
+          <div class="tier-target">
+            <strong>Para quién</strong>
+            Equipos de marketing, RRHH, comercial u operaciones de pymes y áreas de empresas medianas. Entre 4 y 25 personas.
+          </div>
+        </div>
+        <div class="tier-content">
+          <h4>Qué incluye</h4>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Auditoría de "Fugas <em>de tiempo</em>"</h5>
+            <p class="tier-product-desc">Diagnóstico equipo por equipo: dónde se pierden las horas, qué tareas son repetitivas, qué se podría delegar a IA hoy mismo.</p>
+            <div class="tier-includes">
+              <span class="chip">Mapa por rol</span>
+              <span class="chip">Matriz delegable / no delegable</span>
+              <span class="chip">Quick wins identificados</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Biblioteca de Prompts <em>Corporativa</em></h5>
+            <p class="tier-product-desc">Protocolos personalizados según área y tipo de tarea — comunicación, selección, reportes, atención al cliente. Validados con criterio profesional.</p>
+            <div class="tier-includes">
+              <span class="chip">Prompts por área</span>
+              <span class="chip">Versionado y validados</span>
+              <span class="chip">Documentación interna</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Taller de Implementación</h5>
+            <p class="tier-product-desc">Sesión práctica grupal de 90 minutos sobre casos reales del equipo. No teoría: salimos con prompts probados sobre el trabajo de hoy.</p>
+            <div class="tier-includes">
+              <span class="chip">Casos reales</span>
+              <span class="chip">90 min hands-on</span>
+              <span class="chip">Material descargable</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Plan de seguimiento <em>e impacto</em></h5>
+            <p class="tier-product-desc">Métricas de adopción, horas recuperadas y calidad. Revisión a 30/60/90 días para sostener el cambio en el día a día.</p>
+            <div class="tier-includes">
+              <span class="chip">KPIs de productividad</span>
+              <span class="chip">Revisiones 30/60/90</span>
+              <span class="chip">Reporte ejecutivo</span>
+            </div>
+          </div>
         </div>
       </div>
-      <div style={{height:7,background:"#f1f5f9",borderRadius:99}}>
-        <div style={{height:"100%",width:`${pct*100}%`,background:bar,borderRadius:99,transition:"width .7s cubic-bezier(.4,0,.2,1)"}}/>
+    </div>
+
+    <!-- INSTITUCIONAL -->
+    <div class="tier-panel" id="panel-org">
+      <div class="tier-card">
+        <div class="tier-side" data-tier="org">
+          <div>
+            <span class="tier-tag">Nivel 03 · Institucional</span>
+            <h3 class="tier-name">Transformación <em>Consciente</em></h3>
+            <p class="tier-pitch">Programa integral para pymes y organizaciones que necesitan diseñar — no improvisar — su transformación digital con IA. Estructura, gobernanza y sostenibilidad.</p>
+          </div>
+          <div class="tier-target">
+            <strong>Para quién</strong>
+            Pymes consolidadas, fundaciones, estudios profesionales y organizaciones medianas que quieren institucionalizar la IA sin perder cultura propia.
+          </div>
+        </div>
+        <div class="tier-content">
+          <h4>Qué incluye</h4>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Diagnóstico <em>360°</em> organizacional</h5>
+            <p class="tier-product-desc">Auditoría completa: procesos, datos, tecnología actual, cultura y madurez digital. Devolvemos un blueprint con prioridades de impacto.</p>
+            <div class="tier-includes">
+              <span class="chip">Entrevistas clave</span>
+              <span class="chip">Análisis de procesos</span>
+              <span class="chip">Blueprint estratégico</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Arquitectura PCA™ <em>institucional</em></h5>
+            <p class="tier-product-desc">Diseño del sistema completo: protocolos por área, gobernanza de datos, puntos de control humano y métricas de impacto medibles.</p>
+            <div class="tier-includes">
+              <span class="chip">Protocolos por área</span>
+              <span class="chip">Gobernanza de datos</span>
+              <span class="chip">HITL (Human-in-the-Loop)</span>
+              <span class="chip">Roadmap por trimestre</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Programa de <em>Liderazgo Consciente</em></h5>
+            <p class="tier-product-desc">Formación de mandos medios y referentes internos para sostener la transformación cuando nos vamos. La IA no se delega: se lidera.</p>
+            <div class="tier-includes">
+              <span class="chip">Líderes formados</span>
+              <span class="chip">Manual interno</span>
+              <span class="chip">Train-the-trainer</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Acompañamiento <em>3–6 meses</em></h5>
+            <p class="tier-product-desc">Implementación supervisada, ajustes iterativos y reportes ejecutivos trimestrales. Resultado garantizado: productividad sostenible, no episódica.</p>
+            <div class="tier-includes">
+              <span class="chip">3–6 meses</span>
+              <span class="chip">Reportes trimestrales</span>
+              <span class="chip">Ajustes iterativos</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  );
-}
 
-function App() {
-  const [clientName, setClientName] = useState("");
-  const [industry,   setIndustry]   = useState("");
-  const [clientPhone,setClientPhone] = useState("");
-  const [clientEmail,setClientEmail] = useState("");
-  const [answers,    setAnswers]     = useState({});
-  const [manualNotes,setManualNotes] = useState("");
-  const [exported,   setExported]    = useState(false);
-  const [showClear,  setShowClear]   = useState(false);
+    <!-- CONSULTORAS (PARTNERSHIP) -->
+    <div class="tier-panel" id="panel-cons">
+      <div class="tier-card">
+        <div class="tier-side" data-tier="cons">
+          <div>
+            <span class="tier-tag">Nivel 04 · Alianza estratégica</span>
+            <h3 class="tier-name">Para <em>Consultoras</em> de Talento Humano</h3>
+            <p class="tier-pitch">Sumá el módulo de IA Productiva a tu cartera de servicios sin reinventarlo. Tres modelos flexibles de colaboración, una metodología propia de respaldo.</p>
+          </div>
+          <div class="tier-target">
+            <strong>Para quién</strong>
+            Consultoras de RRHH, capital humano, liderazgo y desarrollo organizacional que quieren responder a sus clientes con una solución de vanguardia.
+          </div>
+        </div>
+        <div class="tier-content">
+          <h4>Modelos de colaboración</h4>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Complemento <em>de programas</em></h5>
+            <p class="tier-product-desc">Sumamos el módulo PCA™ a tus actuales talleres de Liderazgo, Comunicación, Gestión del Tiempo o Cultura Organizacional. Co-facilitación o entrega lista.</p>
+            <div class="tier-includes">
+              <span class="chip">Módulo plug-in</span>
+              <span class="chip">Co-facilitación</span>
+              <span class="chip">Material adaptado</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Alianza de servicios</h5>
+            <p class="tier-product-desc">Derivación directa de clientes que requieren transformación digital. Comisiones claras, atribución de marca compartida y onboarding conjunto.</p>
+            <div class="tier-includes">
+              <span class="chip">Comisión por derivación</span>
+              <span class="chip">Atribución compartida</span>
+              <span class="chip">Onboarding conjunto</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">White Label <em>(Marca Blanca)</em></h5>
+            <p class="tier-product-desc">Implementamos nuestra metodología bajo el respaldo y marca de tu consultora. Tus clientes, tu identidad, nuestra arquitectura PCA™ por detrás.</p>
+            <div class="tier-includes">
+              <span class="chip">Marca blanca</span>
+              <span class="chip">Soporte técnico</span>
+              <span class="chip">Materiales sin marcar</span>
+              <span class="chip">Acuerdo de exclusividad opcional</span>
+            </div>
+          </div>
+          <div class="tier-product">
+            <h5 class="tier-product-name">Sello de confianza · Protocolo <em>de Humanidad Digital</em></h5>
+            <p class="tier-product-desc">Toda alianza incluye nuestro estricto protocolo: clasificación de datos, curaduría humana obligatoria sobre IA y uso ético en entornos corporativos.</p>
+            <div class="tier-includes">
+              <span class="chip">Seguridad de datos</span>
+              <span class="chip">Curaduría profesional</span>
+              <span class="chip">Ética y privacidad</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  const handleChange = useCallback((qid,field,value) =>
-    setAnswers(prev=>({...prev,[qid]:{...prev[qid],[field]:value}})), []);
+<!-- ============ CIFRAS / PROMESA ============ -->
+<section class="cifras">
+  <div class="container">
+    <div class="cifras-grid">
+      <div class="cifra reveal"><div class="cifra-num">5–10<em>h</em></div><div class="cifra-label">Recuperadas por semana</div></div>
+      <div class="cifra reveal"><div class="cifra-num">3<em>×</em></div><div class="cifra-label">Pilares replicables</div></div>
+      <div class="cifra reveal"><div class="cifra-num">100<em>%</em></div><div class="cifra-label">Curaduría humana</div></div>
+      <div class="cifra reveal"><div class="cifra-num">48<em>h</em></div><div class="cifra-label">Para empezar a ver impacto</div></div>
+    </div>
+  </div>
+</section>
 
-  const getCatScore = cat => cat.questions.reduce((s,q)=>s+(answers[q.id]?.puntaje||0),0);
-  const catScores = useMemo(()=>Object.fromEntries(CATEGORIES.map(c=>[c.id,getCatScore(c)])),[answers]);
-  const totalScore = Object.values(catScores).reduce((a,b)=>a+b,0);
-  const totalPct = totalScore/125;
-  completed = CATEGORIES.reduce((s,c)=>s+c.questions.filter(q=>answers[q.id]?.puntaje).length,0);
+<!-- ============ FUNDADORA ============ -->
+<section class="founder" id="fundadora">
+  <div class="container">
+    <div class="founder-grid">
+      <div class="founder-img-wrap reveal">
+        <div class="founder-img-frame">
+          <img src="founder-photo.jpg" alt="María Soledad Vila, fundadora de Talento Impulsa Consulting">
+        </div>
+        <div class="founder-stamp"><span><strong>PCA™</strong>creado por MSV</span></div>
+      </div>
+      <div class="founder-content reveal">
+        <div class="section-eyebrow">Sobre la fundadora</div>
+        <h2 class="founder-name">María Soledad <em>Vila</em></h2>
+        <div class="founder-role">Fundadora & Directora · Talento Impulsa Consulting</div>
+        <p class="founder-bio">Creadora del <em>Modelo PCA™ — Productividad Consciente Aumentada</em>, un marco estratégico que integra Inteligencia Artificial con liderazgo organizacional, criterio profesional y responsabilidad ética.</p>
+        <p class="founder-bio">Trabajo con profesionales independientes, pymes y consultoras de talento humano que entendieron que el problema no es la IA. Es la falta de arquitectura para usarla bien.</p>
+        <div class="founder-cred">
+          <span class="cred">Especialista en productividad con IA</span>
+          <span class="cred">Gestión del talento</span>
+          <span class="cred">Argentina · LATAM</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  const reco = useMemo(()=>{
-    if(completed<10) return null;
-    return getRecommendation(catScores,totalPct);
-  },[catScores,totalPct,completed]);
+<!-- ============ CITA FINAL ============ -->
+<section class="cita">
+  <div class="cita-inner">
+    <p class="cita-quote">
+      <em>Manifiesto</em>
+      La productividad del futuro no será más rápida.
+      <strong>Será <span>más consciente</span>.</strong>
+      <strong>Y quienes diseñen sistemas, liderarán esa transformación.</strong>
+    </p>
+  </div>
+</section>
 
-  const totalDiag = totalPct<0.4?"🔴 Requiere intervención urgente":totalPct<0.7?"🟡 Tiene potencial de mejora":"🟢 Está bien encaminado";
-  const totalBg = totalPct<0.4?"#fef2f2":totalPct<0.7?"#fffbeb":"#f0fdf4";
-  const totalTc = totalPct<0.4?"#dc2626":totalPct<0.7?"#d97706":"#16a34a";
+<!-- ============ CTA / CONTACTO ============ -->
+<section class="cta" id="contacto">
+  <div class="container">
+    <div class="cta-card">
+      <div class="cta-inner">
+        <div class="cta-eyebrow">Conversemos</div>
+        <h2 class="cta-title">Si querés dejar de improvisar tu productividad y empezar a <em>diseñarla</em>.</h2>
+        <p class="cta-text">Una primera conversación de 30 minutos para entender tu contexto, mostrarte cómo aplica el modelo PCA™ y proponerte el camino más corto a resultados sostenibles.</p>
+        <div class="cta-channels">
+          <a href="https://wa.me/5491169580303" class="channel" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.1s-.8.9-.9 1.1c-.2.2-.3.2-.6.1-1.7-.8-2.8-1.5-3.9-3.4-.3-.5.3-.5.8-1.5.1-.2 0-.3 0-.5s-.7-1.7-1-2.3c-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4s-1 1-1 2.4 1.1 2.8 1.2 3c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.2-.3-.3-.6-.4z"/><path d="M20.5 3.5C18.3 1.2 15.3 0 12.1 0 5.5 0 .1 5.4.1 12c0 2.1.6 4.2 1.6 6L0 24l6.2-1.6c1.7.9 3.7 1.4 5.7 1.4h.1c6.6 0 11.9-5.4 11.9-11.9 0-3.2-1.2-6.2-3.4-8.4zM12.1 21.7c-1.8 0-3.5-.5-5-1.4l-.4-.2L3 21l1-3.6-.2-.4C2.7 15.5 2.1 13.8 2.1 12 2.1 6.5 6.6 2 12.1 2c2.7 0 5.2 1 7 2.9 1.9 1.9 2.9 4.4 2.9 7-.1 5.6-4.6 9.8-9.9 9.8z"/></svg>
+            +54 9 11 6958 0303
+          </a>
+          <a href="mailto:msoledadvila@gmail.com" class="channel">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+            msoledadvila@gmail.com
+          </a>
+          <a href="https://instagram.com/talentoimpulsaconsulting" class="channel" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.9.9 1.4.2.4.4 1.1.4 2.2.1 1.2.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.9.7-1.4.9-.4.2-1.1.4-2.2.4-1.2.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.9-.9-1.4-.2-.4-.4-1.1-.4-2.2-.1-1.2-.1-1.6-.1-4.8s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.9-.7 1.4-.9.4-.2 1.1-.4 2.2-.4 1.2-.1 1.6-.1 4.8-.1M12 0C8.7 0 8.3 0 7.1.1 5.8.1 5 .3 4.2.6c-.8.3-1.5.7-2.1 1.4C1.4 2.7 1 3.4.7 4.2.4 5 .2 5.8.1 7.1 0 8.3 0 8.7 0 12s0 3.7.1 4.9c.1 1.3.3 2.1.6 2.9.3.8.7 1.5 1.4 2.1.6.6 1.3 1.1 2.1 1.4.8.3 1.6.5 2.9.6 1.2.1 1.6.1 4.9.1s3.7 0 4.9-.1c1.3-.1 2.1-.3 2.9-.6.8-.3 1.5-.7 2.1-1.4.6-.6 1.1-1.3 1.4-2.1.3-.8.5-1.6.6-2.9.1-1.2.1-1.6.1-4.9s0-3.7-.1-4.9c-.1-1.3-.3-2.1-.6-2.9-.3-.8-.7-1.5-1.4-2.1C21.3 1.4 20.6 1 19.8.7 19 .4 18.2.2 16.9.1 15.7 0 15.3 0 12 0z"/><path d="M12 5.8c-3.4 0-6.2 2.8-6.2 6.2s2.8 6.2 6.2 6.2 6.2-2.8 6.2-6.2-2.8-6.2-6.2-6.2zm0 10.2c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z"/><circle cx="18.4" cy="5.6" r="1.4"/></svg>
+            @talentoimpulsaconsulting
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  const handleClear = () => {
-    setClientName("");setIndustry("");setClientPhone("");setClientEmail("");setAnswers({});setManualNotes("");setShowClear(false);
-    window.scrollTo({top:0,behavior:"smooth"});
-  };
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">Talento <em>Impulsa</em><br>Consulting</div>
+        <p class="footer-text">Diseñamos sistemas de productividad consciente para profesionales y organizaciones que buscan integrar IA sin perder criterio ni liderazgo.</p>
+      </div>
+      <div>
+        <div class="footer-h">Servicios</div>
+        <ul class="footer-list">
+          <li><a href="#servicios">Pack Autonomía PCA™</a></li>
+          <li><a href="#servicios">Arquitectura de Equipos</a></li>
+          <li><a href="#servicios">Transformación Consciente</a></li>
+          <li><a href="#servicios">Alianza para Consultoras</a></li>
+        </ul>
+      </div>
+      <div>
+        <div class="footer-h">Contacto</div>
+        <ul class="footer-list">
+          <li>+54 9 11 6958 0303</li>
+          <li>msoledadvila@gmail.com</li>
+          <li>@talentoimpulsaconsulting</li>
+          <li>Buenos Aires, Argentina</li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Talento Impulsa Consulting · María Soledad Vila</span>
+      <span>Modelo PCA™ — Productividad Consciente Aumentada</span>
+    </div>
+  </div>
+</footer>
 
-  const exportExcel = () => {
-    const today = new Date().toLocaleDateString("es-AR");
-    const wb = XLSX_LIB.utils.book_new();
+<script>
+// Nav scroll
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  if (window.scrollY > 20) nav.classList.add('scrolled');
+  else nav.classList.remove('scrolled');
+});
 
-    const data = [
-      ["MATRIZ DE AUDITORÍA PCA™ — Diagnóstico de Productividad Consciente Aumentada"],
-      ["Talento Impulsa Consulting  |  María Soledad Vila"],
-      ["talentoimpulsa@outlook.com  ·  +54 9 11 69580303  ·  @talentoimpulsaconsulting"],
-      [],
-      ["Cliente / Empresa:", clientName||"—", "", "Industria:", industry||"—", "", "Fecha:", today],
-      ["Celular:", clientPhone||"—", "", "Email:", clientEmail||"—"],
-      [],
-      ["─".repeat(80)],
-      ["DIAGNÓSTICO COMPLETO — 25 PREGUNTAS"],
-      ["─".repeat(80)],
-      ["CATEGORÍA","PREGUNTA","RESPUESTA DEL CLIENTE","PUNTAJE (1-5)","NOTAS DEL CONSULTOR"],
-    ];
+// Menu mobile
+const toggle = document.getElementById('menu-toggle');
+const links = document.getElementById('nav-links');
+toggle.addEventListener('click', () => {
+  toggle.classList.toggle('open');
+  links.classList.toggle('open');
+});
+links.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+  toggle.classList.remove('open');
+  links.classList.remove('open');
+}));
 
-    CATEGORIES.forEach(cat=>{
-      cat.questions.forEach((q,i)=>{
-        const a=answers[q.id]||{};
-        data.push([i===0?`${cat.icon} ${cat.label}`:"",q.text,a.respuesta||"",a.puntaje||"",a.notas||""]);
-      });
-      data.push(["","","","",""]);
-    });
+// Tier tabs
+const tabs = document.querySelectorAll('.tier-tab');
+tabs.forEach(t => {
+  t.addEventListener('click', () => {
+    const target = t.dataset.tab;
+    tabs.forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tier-panel').forEach(p => p.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('panel-' + target).classList.add('active');
+  });
+});
 
-    data.push(["─".repeat(80)],["RESULTADOS DEL DIAGNÓSTICO"],["─".repeat(80)]);
-    data.push(["","Categoría","Puntaje Obtenido","Puntaje Máximo","% Eficiencia","Diagnóstico"]);
-    CATEGORIES.forEach(cat=>{
-      const s=catScores[cat.id]; const p=s/25;
-      data.push(["",`${cat.icon} ${cat.label}`,s,25,`${Math.round(p*100)}%`,p<0.4?"🔴 CRÍTICO":p<0.7?"🟡 MEJORABLE":"🟢 BIEN"]);
-    });
-    const td=totalPct<0.4?"🔴 REQUIERE INTERVENCIÓN URGENTE":totalPct<0.7?"🟡 TIENE POTENCIAL DE MEJORA":"🟢 ESTÁ BIEN ENCAMINADO";
-    data.push(["","🏆 PUNTAJE TOTAL",totalScore,125,`${Math.round(totalPct*100)}%`,td]);
-
-    if(reco){
-      data.push([],["─".repeat(80)],["PRINCIPALES CUELLOS DE BOTELLA DETECTADOS"],["─".repeat(80)]);
-      reco.bottlenecks.forEach((b,i)=>data.push([`${i+1}.`,`${b.icon} ${b.cat} (${Math.round(b.pct*100)}% eficiencia)`,b.text]));
-
-      data.push([],["─".repeat(80)],["SOLUCIÓN RECOMENDADA"],["─".repeat(80)]);
-      data.push([reco.pack.emoji+" "+reco.pack.name,"","",reco.pack.tagline]);
-      data.push(["Por qué este pack:",reco.reasoning]);
-      data.push([],[" QUÉ INCLUYE:"]);
-      reco.pack.includes.forEach(inc=>data.push(["","  ✓ "+inc]));
-      data.push(["","Resultado esperado:","",reco.pack.outcome]);
-
-      data.push([],["─".repeat(80)],["RECOMENDACIONES PERSONALIZADAS"],["─".repeat(80)]);
-      data.push([reco.recoText]);
+// Reveal on scroll
+const reveals = document.querySelectorAll('.reveal');
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('in');
+      obs.unobserve(e.target);
     }
+  });
+}, { threshold: 0.12 });
+reveals.forEach(r => obs.observe(r));
 
-    if(manualNotes){
-      data.push([],["─".repeat(80)],["NOTAS ADICIONALES DEL CONSULTOR"],["─".repeat(80)]);
-      data.push([manualNotes]);
-    }
-
-    data.push([],["─".repeat(80)],["Para más información:"]);
-    data.push(["","talentoimpulsa@outlook.com  ·  +54 9 11 69580303  ·  @talentoimpulsaconsulting"]);
-
-    const ws = XLSX_LIB.utils.aoa_to_sheet(data);
-    ws["!cols"] = [{wch:26},{wch:52},{wch:30},{wch:14},{wch:14},{wch:32}];
-    XLSX_LIB.utils.book_append_sheet(wb,ws,"Diagnóstico PCA");
-
-    // Sheet 2
-    const guia=[
-      ["GUÍA DE INTERPRETACIÓN — PCA™"],["Talento Impulsa Consulting"],[],
-      ["ESCALA DE PUNTAJE 1 A 5"],[],
-      ["PUNTAJE","NIVEL","DESCRIPCIÓN"],
-      [1,"🔴 Crítico","Situación grave. No existe sistema ni proceso establecido."],
-      [2,"🟠 Débil","Situación problemática. Sistema muy deficiente o casi inexistente."],
-      [3,"🟡 Medio","Mejorable. Sistema parcial que funciona pero con mucho esfuerzo."],
-      [4,"🟢 Bueno","Aceptable. Sistema funcional con áreas específicas de mejora."],
-      [5,"✨ Óptimo","Excelente. Sistema consolidado, eficiente y reproducible."],
-      [],[],["INTERPRETACIÓN GLOBAL"],[],
-      ["RANGO","DIAGNÓSTICO","ACCIÓN SUGERIDA"],
-      ["0–40%","🔴 CRÍTICO","Intervención urgente y sistémica."],
-      ["40–70%","🟡 MEJORABLE","Optimización con sistema y acompañamiento."],
-      ["70–100%","🟢 BIEN","Refinamiento y escalabilidad."],
-      [],[],["NUESTROS PACKS"],[],
-      ["PACK","NIVEL","IDEAL PARA","RESULTADO"],
-      ["🚀 Pack Autonomía PCA™","Profesional Individual","Profesionales con baja eficiencia personal","Ahorrar 5-10 hs semanales"],
-      ["👥 Pack Digital Equipo","Equipo / Organización","Equipos con problemas de comunicación y documentación","Procesos colaborativos sistematizados"],
-      ["🧭 Mentoría Estratégica 1:1","Liderazgo Consciente","Líderes con problemas de delegación y decisiones","Arquitectura de liderazgo rediseñada"],
-      ["🏛️ Consultoría Institucional","Transformación Org.","Organizaciones con cuellos de botella sistémicos","Transformación digital sostenible"],
-      [],[],["CONTACTO"],[],
-      ["María Soledad Vila","talentoimpulsa@outlook.com","+54 9 11 69580303","@talentoimpulsaconsulting"],
-    ];
-    const ws2=XLSX_LIB.utils.aoa_to_sheet(guia);
-    ws2["!cols"]=[{wch:30},{wch:26},{wch:38},{wch:38}];
-    XLSX_LIB.utils.book_append_sheet(wb,ws2,"Guía de Scoring");
-
-    const fname=`Diagnostico_PCA_${(clientName||"Cliente").replace(/\s+/g,"_")}_${today.replace(/\//g,"-")}.xlsx`;
-    XLSX_LIB.writeFile(wb,fname);
-    setExported(true);
-    setTimeout(()=>setExported(false),3000);
-  };
-
-  return (
-    <div style={{minHeight:"100vh",background:"#f0f4fa"}}>
-      {/* CLEAR MODAL */}
-      {showClear&&(
-        <div className="modal-overlay" onClick={()=>setShowClear(false)}>
-          <div className="modal" onClick={e=>e.stopPropagation()}>
-            <div style={{fontSize:40,textAlign:"center",marginBottom:14}}>🗂️</div>
-            <h2 style={{textAlign:"center",fontFamily:"'Cormorant Garamond',serif",color:"#1a2e5c",fontSize:22,marginBottom:10}}>¿Nueva auditoría?</h2>
-            <p style={{textAlign:"center",color:"#64748b",fontSize:13.5,lineHeight:1.65,marginBottom:26}}>
-              Se borrarán todos los datos del cliente actual para comenzar de cero.<br/>
-              <strong style={{color:"#374151"}}>Esta acción no se puede deshacer.</strong>
-            </p>
-            <div style={{display:"flex",gap:12}}>
-              <button onClick={()=>setShowClear(false)} style={{flex:1,padding:"11px",borderRadius:10,border:"1.5px solid #e2e8f0",background:"#fff",color:"#475569",fontSize:14,fontWeight:600,cursor:"pointer"}}>Cancelar</button>
-              <button onClick={handleClear} style={{flex:1,padding:"11px",borderRadius:10,border:"none",background:"linear-gradient(135deg,#dc2626,#b91c1c)",color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer"}}>Sí, nueva planilla</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* HEADER */}
-      <div style={{background:"linear-gradient(135deg,#1a2e5c 0%,#2E5090 65%,#3a6bc0 100%)",padding:"22px 28px 18px",position:"sticky",top:0,zIndex:100,boxShadow:"0 4px 24px rgba(46,80,144,.3)"}}>
-        <div style={{maxWidth:1000,margin:"0 auto"}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap",gap:12}}>
-            <div>
-              <div style={{display:"flex",alignItems:"center",gap:9,marginBottom:3}}>
-                <div style={{width:3,height:25,background:"#D4AF37",borderRadius:2}}/>
-                <h1 style={{fontSize:21,fontWeight:700,color:"#fff",fontFamily:"'Cormorant Garamond',serif",letterSpacing:.3}}>Matriz de Auditoría PCA™</h1>
-              </div>
-              <p style={{fontSize:11.5,color:"#93b5e1",marginLeft:12}}>Diagnóstico de Productividad Consciente Aumentada · Talento Impulsa Consulting</p>
-            </div>
-            <div style={{display:"flex",alignItems:"center",gap:9}}>
-              <div style={{textAlign:"right",marginRight:2}}>
-                <div style={{fontSize:23,fontWeight:700,color:"#D4AF37",fontFamily:"'Cormorant Garamond',serif"}}>{completed}/25</div>
-                <div style={{fontSize:10,color:"#93b5e1"}}>completadas</div>
-              </div>
-              <button className="ghost-btn" onClick={()=>setShowClear(true)} style={{padding:"8px 13px",borderRadius:9,border:"1.5px solid rgba(255,255,255,.25)",background:"transparent",color:"rgba(255,255,255,.85)",fontSize:12,fontWeight:600}}>🗂️ Nueva</button>
-              <button className="ghost-btn" onClick={exportExcel} style={{padding:"9px 17px",borderRadius:9,border:"none",background:exported?"#22c55e":"#D4AF37",color:"#1a2e5c",fontSize:13,fontWeight:700,whiteSpace:"nowrap"}}>
-                {exported?"✓ Descargado":"⬇ Exportar Excel"}
-              </button>
-            </div>
-          </div>
-          <div style={{marginTop:11,height:3,background:"rgba(255,255,255,.15)",borderRadius:99}}>
-            <div style={{height:"100%",width:`${(completed/25)*100}%`,background:"#D4AF37",borderRadius:99,transition:"width .4s ease"}}/>
-          </div>
-        </div>
-      </div>
-
-      <div style={{maxWidth:1000,margin:"0 auto",padding:"24px 16px 80px"}}>
-
-        {/* DATOS CLIENTE */}
-        <div style={{background:"#fff",borderRadius:14,padding:"20px 24px",marginBottom:20,boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
-          <h2 style={{margin:"0 0 14px",fontSize:11.5,fontWeight:700,color:"#2E5090",textTransform:"uppercase",letterSpacing:1.2}}>Datos del Cliente</h2>
-          <div style={{display:"flex",gap:13,flexWrap:"wrap"}}>
-            {[{l:"Nombre / Empresa",v:clientName,s:setClientName,p:"Ej: Empresa S.A.",f:"1 1 200px"},
-              {l:"Industria",v:industry,s:setIndustry,p:"Ej: Tecnología",f:"1 1 140px"}].map(f=>(
-              <div key={f.l} style={{flex:f.f}}>
-                <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.5,textTransform:"uppercase",display:"block",marginBottom:5}}>{f.l}</label>
-                <input value={f.v} onChange={e=>f.s(e.target.value)} placeholder={f.p} style={{width:"100%",padding:"9px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:14,color:"#1e293b"}}/>
-              </div>
-            ))}
-            <div style={{flex:"0 0 120px"}}>
-              <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.5,textTransform:"uppercase",display:"block",marginBottom:5}}>Fecha</label>
-              <input value={new Date().toLocaleDateString("es-AR")} disabled style={{width:"100%",padding:"9px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:14,color:"#94a3b8",background:"#fafafa"}}/>
-            </div>
-          </div>
-          <div style={{display:"flex",gap:13,flexWrap:"wrap",marginTop:12}}>
-            <div style={{flex:"1 1 180px"}}>
-              <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.5,textTransform:"uppercase",display:"block",marginBottom:5}}>📱 Celular</label>
-              <input value={clientPhone} onChange={e=>setClientPhone(e.target.value)} placeholder="Ej: +54 9 11 12345678" type="tel" style={{width:"100%",padding:"9px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:14,color:"#1e293b"}}/>
-            </div>
-            <div style={{flex:"2 1 220px"}}>
-              <label style={{fontSize:10,color:"#94a3b8",fontWeight:700,letterSpacing:.5,textTransform:"uppercase",display:"block",marginBottom:5}}>✉️ Email</label>
-              <input value={clientEmail} onChange={e=>setClientEmail(e.target.value)} placeholder="Ej: contacto@empresa.com" type="email" style={{width:"100%",padding:"9px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:14,color:"#1e293b"}}/>
-            </div>
-          </div>
-        </div>
-
-        {/* NAV PILLS */}
-        <div style={{display:"flex",gap:7,flexWrap:"wrap",marginBottom:18}}>
-          {CATEGORIES.map(cat=>{
-            const filled=cat.questions.filter(q=>answers[q.id]?.puntaje).length;
-            return (
-              <a key={cat.id} href={`#cat-${cat.id}`} className="nav-pill" style={{
-                display:"flex",alignItems:"center",gap:6,padding:"7px 12px",
-                borderRadius:20,background:"#fff",border:`2px solid ${cat.color}1A`,
-                color:cat.color,fontSize:11.5,fontWeight:600,textDecoration:"none",whiteSpace:"nowrap",
-              }}>
-                <span>{cat.icon}</span><span>{cat.label}</span>
-                <span style={{background:cat.color,color:"#fff",borderRadius:99,padding:"1px 7px",fontSize:10.5}}>{filled}/5</span>
-              </a>
-            );
-          })}
-        </div>
-
-        {/* CATEGORÍAS */}
-        {CATEGORIES.map(cat=>(
-          <div key={cat.id} id={`cat-${cat.id}`} style={{marginBottom:24}}>
-            <div style={{background:cat.light,borderRadius:"14px 14px 0 0",padding:"13px 19px",display:"flex",alignItems:"center",gap:10,borderBottom:`3px solid ${cat.color}`}}>
-              <span style={{fontSize:19}}>{cat.icon}</span>
-              <div>
-                <h2 style={{fontSize:15,fontWeight:700,color:cat.color,fontFamily:"'Cormorant Garamond',serif"}}>{cat.label}</h2>
-                <p style={{fontSize:11,color:"#64748b"}}>Puntaje: {catScores[cat.id]}/25 · {cat.questions.filter(q=>answers[q.id]?.puntaje).length} de 5 respondidas</p>
-              </div>
-            </div>
-            <div style={{background:"#f8fafc",padding:"13px 4px 4px",borderRadius:"0 0 14px 14px",border:"1px solid #e2e8f0",borderTop:"none"}}>
-              {cat.questions.map(q=><QuestionCard key={q.id} question={q} catColor={cat.color} catLight={cat.light} answers={answers} onChange={handleChange}/>)}
-            </div>
-          </div>
-        ))}
-
-        {/* RESULTADOS */}
-        <div style={{background:"#fff",borderRadius:14,padding:"24px",marginBottom:18,boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
-          <h2 style={{margin:"0 0 18px",fontSize:16,fontWeight:700,color:"#1a2e5c",fontFamily:"'Cormorant Garamond',serif"}}>📊 Resultados del Diagnóstico</h2>
-          {CATEGORIES.map(cat=><ResultBar key={cat.id} label={`${cat.icon} ${cat.label}`} score={catScores[cat.id]} max={25}/>)}
-          <div style={{marginTop:16,padding:"13px 17px",borderRadius:10,background:totalBg,border:`2px solid ${totalTc}33`,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:8}}>
-            <span style={{fontSize:14,fontWeight:700,color:"#1e293b"}}>Puntaje Total</span>
-            <div style={{display:"flex",alignItems:"center",gap:12}}>
-              <span style={{fontSize:22,fontWeight:700,color:totalTc,fontFamily:"'Cormorant Garamond',serif"}}>{totalScore}/125</span>
-              <span style={{fontSize:12,fontWeight:700,color:totalTc}}>{totalDiag}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* CUELLOS AUTOMÁTICOS */}
-        {completed>=10 && reco ? (
-          <div className="fade-in" style={{background:"#fff",borderRadius:14,padding:"24px",marginBottom:18,boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
-            <h2 style={{margin:"0 0 16px",fontSize:16,fontWeight:700,color:"#1a2e5c",fontFamily:"'Cormorant Garamond',serif"}}>🎯 Principales Cuellos de Botella Detectados</h2>
-            <div style={{display:"flex",flexDirection:"column",gap:10}}>
-              {reco.bottlenecks.map((b,i)=>{
-                const bg2=b.pct<0.4?"#fef2f2":b.pct<0.7?"#fffbeb":"#f0fdf4";
-                const tc2=b.pct<0.4?"#dc2626":b.pct<0.7?"#d97706":"#16a34a";
-                return (
-                  <div key={i} style={{display:"flex",gap:11,alignItems:"flex-start",background:bg2,border:`1px solid ${tc2}33`,borderRadius:10,padding:"11px 13px"}}>
-                    <div style={{width:26,height:26,borderRadius:"50%",background:tc2,color:"#fff",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,flexShrink:0}}>{i+1}</div>
-                    <div>
-                      <div style={{fontSize:12,fontWeight:700,color:tc2,marginBottom:3}}>{b.icon} {b.cat} — {Math.round(b.pct*100)}% eficiencia</div>
-                      <p style={{fontSize:12.5,color:"#374151",lineHeight:1.5,margin:0}}>{b.text}</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        ) : completed>=5&&completed<10 ? (
-          <div style={{background:"#f8fafc",borderRadius:14,padding:"18px 22px",marginBottom:18,border:"1.5px dashed #cbd5e1",textAlign:"center"}}>
-            <p style={{color:"#94a3b8",fontSize:13}}>Completá al menos 10 puntajes para ver el análisis automático y la recomendación de pack.</p>
-          </div>
-        ) : null}
-
-        {/* PACK RECOMENDADO */}
-        {reco && (
-          <div className="fade-in pulse-card" style={{background:reco.pack.bg,border:`2px solid ${reco.pack.color}33`,borderRadius:14,padding:"24px",marginBottom:18}}>
-            <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:14}}>
-              <span style={{fontSize:28}}>{reco.pack.emoji}</span>
-              <div>
-                <div style={{display:"flex",alignItems:"center",gap:8}}>
-                  <h2 style={{fontSize:18,fontWeight:700,color:reco.pack.color,fontFamily:"'Cormorant Garamond',serif"}}>{reco.pack.name}</h2>
-                  <span style={{fontSize:10,fontWeight:700,background:reco.pack.color,color:"#fff",padding:"3px 10px",borderRadius:20}}>RECOMENDADO</span>
-                </div>
-                <div style={{fontSize:11,color:"#64748b",fontWeight:600}}>{reco.pack.tagline}</div>
-              </div>
-            </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20,flexWrap:"wrap"}}>
-              <div>
-                <div style={{fontSize:11,fontWeight:700,color:reco.pack.color,textTransform:"uppercase",letterSpacing:.5,marginBottom:7}}>¿Por qué este pack?</div>
-                <p style={{fontSize:13,color:"#374151",lineHeight:1.6,borderLeft:`3px solid ${reco.pack.color}`,paddingLeft:10,marginBottom:14,fontStyle:"italic"}}>{reco.reasoning}</p>
-                <div style={{background:reco.pack.color,color:"#fff",borderRadius:9,padding:"9px 14px",fontSize:12.5,fontWeight:600,textAlign:"center"}}>
-                  🎯 {reco.pack.outcome}
-                </div>
-              </div>
-              <div>
-                <div style={{fontSize:11,fontWeight:700,color:reco.pack.color,textTransform:"uppercase",letterSpacing:.5,marginBottom:7}}>Incluye</div>
-                <ul style={{listStyle:"none",padding:0,margin:0}}>
-                  {reco.pack.includes.map((item,i)=>(
-                    <li key={i} style={{display:"flex",gap:7,alignItems:"flex-start",marginBottom:6,fontSize:12.5,color:"#374151"}}>
-                      <span style={{color:reco.pack.color,flexShrink:0,marginTop:1}}>✓</span><span>{item}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* RECOMENDACIONES + NOTAS MANUALES */}
-        <div style={{display:"flex",gap:16,flexWrap:"wrap",marginBottom:20}}>
-          {reco&&(
-            <div style={{flex:"2 1 340px",background:"#fff",borderRadius:14,padding:"22px",boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
-              <h2 style={{margin:"0 0 13px",fontSize:15,fontWeight:700,color:"#1a2e5c",fontFamily:"'Cormorant Garamond',serif"}}>📝 Recomendaciones Personalizadas</h2>
-              <div style={{background:"#f8fafc",borderRadius:10,padding:"13px 15px",fontSize:13,color:"#374151",lineHeight:1.7,whiteSpace:"pre-line",border:"1px solid #e2e8f0"}}>{reco.recoText}</div>
-            </div>
-          )}
-          <div style={{flex:"1 1 240px",background:"#fff",borderRadius:14,padding:"22px",boxShadow:"0 2px 12px rgba(0,0,0,.06)",border:"1px solid #e2e8f0"}}>
-            <h2 style={{margin:"0 0 9px",fontSize:15,fontWeight:700,color:"#1a2e5c",fontFamily:"'Cormorant Garamond',serif"}}>✏️ Notas Adicionales</h2>
-            <p style={{fontSize:11.5,color:"#94a3b8",marginBottom:10}}>Contexto extra, próximos pasos, compromisos del cliente u otra información relevante para el informe.</p>
-            <textarea rows={7} value={manualNotes} onChange={e=>setManualNotes(e.target.value)}
-              placeholder="Ej: El cliente tiene una reunión de directorio en marzo y quiere presentar un plan de productividad. Se comprometió a implementar el pack antes de esa fecha. Mencionó que su principal dolor es la delegación al equipo..."
-              style={{width:"100%",padding:"11px 12px",borderRadius:8,border:"1.5px solid #e2e8f0",fontSize:12.5,resize:"vertical",color:"#1e293b",lineHeight:1.6}}/>
-          </div>
-        </div>
-
-        {/* BOTONES FINALES */}
-        <div style={{display:"flex",gap:12,justifyContent:"center",flexWrap:"wrap"}}>
-          <button className="ghost-btn" onClick={()=>setShowClear(true)} style={{padding:"11px 26px",borderRadius:11,border:"2px solid #e2e8f0",background:"#fff",color:"#64748b",fontSize:14,fontWeight:600}}>
-            🗂️ Nueva Planilla
-          </button>
-          <button className="ghost-btn" onClick={exportExcel} style={{padding:"12px 38px",borderRadius:11,border:"none",background:"linear-gradient(135deg,#1a2e5c,#2E5090)",color:"#fff",fontSize:14,fontWeight:700,boxShadow:"0 4px 20px rgba(46,80,144,.28)"}}>
-            ⬇ Exportar Diagnóstico Completo a Excel
-          </button>
-        </div>
-        <p style={{textAlign:"center",marginTop:9,fontSize:11,color:"#94a3b8"}}>
-          El Excel incluye diagnóstico completo · cuellos de botella · pack recomendado · recomendaciones personalizadas
-        </p>
-      </div>
-    </div>
-  );
+// Hero particles
+const particles = document.getElementById('particles');
+for (let i = 0; i < 18; i++) {
+  const p = document.createElement('div');
+  p.className = 'particle';
+  p.style.left = Math.random() * 100 + '%';
+  p.style.top = Math.random() * 100 + '%';
+  p.style.animationDelay = Math.random() * 8 + 's';
+  p.style.animationDuration = (6 + Math.random() * 6) + 's';
+  particles.appendChild(p);
 }
-
-ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
+
 </body>
 </html>
