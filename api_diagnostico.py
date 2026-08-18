@@ -138,9 +138,23 @@ def chat():
         puntajes = estado["puntajes"]
         contacto = estado.get("contacto", {})
 
-        if not mensaje or not mensaje.strip():
-            return jsonify({"error": "falta 'mensaje'"}), 400
-        historial.append({"role": "user", "content": mensaje})
+        # Caso especial: el frontend está reintentando el turno INICIAL (la
+        # sesión se creó y el lead ya se registró en un intento anterior,
+        # pero Groq falló antes de devolver la primera pregunta). No hay un
+        # "mensaje" nuevo del usuario para agregar acá — solo hay que
+        # reintentar la llamada al modelo sobre el mismo historial. Sin este
+        # caso, cada reintento automático del frontend terminaría creando
+        # una sesión (y un lead en Sheets) nueva y duplicada.
+        es_reintento_inicial = (
+            (not mensaje or not mensaje.strip())
+            and len(historial) == 1
+            and len(puntajes) == 0
+        )
+
+        if not es_reintento_inicial:
+            if not mensaje or not mensaje.strip():
+                return jsonify({"error": "falta 'mensaje'"}), 400
+            historial.append({"role": "user", "content": mensaje})
     else:
         # Primer request de esta visita: pedimos nombre y mail ANTES de arrancar
         # la entrevista (así no se pierde el lead si el visitante abandona a
