@@ -114,7 +114,13 @@ app = Flask(__name__)
 # Si ALLOWED_ORIGIN no está seteada, cae a "*" (útil para probar local, pero
 # NO dejar así en producción).
 ALLOWED_ORIGIN = os.getenv("ALLOWED_ORIGIN", "*")
-CORS(app, resources={r"/chat": {"origins": ALLOWED_ORIGIN}})
+# Antes esto solo cubría r"/chat", y cuando se agregó /completar-lead como
+# endpoint nuevo se quedó sin CORS habilitado — el navegador lo bloqueaba en
+# el preflight sin que hubiera ningún error visible en los logs del backend
+# (el pedido ni siquiera llegaba a Flask). Con r"/*" queda cubierta toda la
+# API de una vez, así que un endpoint nuevo el día de mañana no repite este
+# mismo bug.
+CORS(app, resources={r"/*": {"origins": ALLOWED_ORIGIN}})
 
 
 @app.get("/health")
