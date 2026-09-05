@@ -93,7 +93,13 @@ def enviar_resultado_cliente(email_destino, nombre, resultado):
         html = _armar_html(nombre, resultado)
         msg.attach(MIMEText(html, "html"))
 
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+        # timeout=10: SIN esto, si la conexión SMTP se cuelga (bloqueo de red,
+        # Gmail lento, etc.) este llamado puede quedarse esperando indefinida-
+        # mente — y como Flask en modo desarrollo atiende un pedido a la vez,
+        # eso puede trabar el servicio ENTERO para todos los demás visitantes,
+        # no solo fallar este mail puntual. Con el timeout, a los 10 segundos
+        # falla y se loguea, sin bloquear nada más.
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as server:
             server.starttls()
             server.login(smtp_user, smtp_password)
             server.sendmail(smtp_user, [email_destino], msg.as_string())
