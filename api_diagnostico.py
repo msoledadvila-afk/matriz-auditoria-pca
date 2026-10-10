@@ -31,7 +31,7 @@ from agente_diagnostico_pca import (
     extraer_puntaje,
     calcular_resultado,
 )
-from sheets_leads import registrar_lead_inicio, completar_lead
+from sheets_leads import registrar_lead_inicio, completar_lead, COLUMNAS_UTM
 from notificaciones_email import enviar_resultado_cliente
 
 # Sin esto, algunos entornos no muestran los logger.warning()/logger.exception()
@@ -41,6 +41,21 @@ logging.basicConfig(level=logging.INFO, format="%(levelname)s:%(name)s:%(message
 logger = logging.getLogger(__name__)
 
 REGEX_EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+def _leer_utm(valor):
+    """Toma el campo 'utm' del primer pedido a /chat y devuelve un dict solo
+    con las 4 claves conocidas (utm_source/medium/campaign/content), como
+    texto y acotado a 200 caracteres. Si no viene, o viene con otra forma,
+    devuelve {} — nunca rompe el pedido ni la entrevista."""
+    if not isinstance(valor, dict):
+        return {}
+    limpio = {}
+    for clave in COLUMNAS_UTM:
+        v = valor.get(clave)
+        if isinstance(v, str) and v.strip():
+            limpio[clave] = v.strip()[:200]
+    return limpio
 
 # --- Configuración de estado por sesión ------------------------------------
 # Cada visitante tiene su propio archivo: estado/estado_<session_id>.json
@@ -173,15 +188,21 @@ def chat():
         if not email or not REGEX_EMAIL.match(email):
             return jsonify({"error": "el mail no parece válido"}), 400
 
+        # UTM del anuncio (si el visitante vino de uno). Viajan SOLO en este
+        # primer pedido; las guardamos también en el estado de la sesión para
+        # que completar_lead() pueda usarlas si tuviera que crear la fila de
+        # cero (ver sheets_leads.completar_lead).
+        utm = _leer_utm(body.get("utm"))
+
         session_id = str(uuid.uuid4())
         historial = [{"role": "user", "content": "Iniciá el diagnóstico."}]
         puntajes = {}
-        contacto = {"nombre": nombre, "email": email, "telefono": ""}
+        contacto = {"nombre": nombre, "email": email, "telefono": "", "utm": utm}
 
         # Best-effort: si Sheets no está configurado o falla, no cortamos la
         # entrevista — el lead igual se puede recuperar al completar_lead()
         # (agrega la fila si no la encuentra) o revisando logs de Render.
-        registrar_lead_inicio(session_id, nombre, email)
+        registrar_lead_inicio(session_id, nombre, email, utm)
 
     respuesta_modelo = consultar_modelo(historial, SYSTEM_PROMPT)
     if respuesta_modelo is None:
@@ -247,7 +268,7 @@ def completar_lead_endpoint():
     pack_nombre = resultado["pack"]["nombre"]
     resumen = resultado["razon"]
 
-    sheets_ok = completar_lead(session_id, telefono, pack_nombre, resumen)
+    sheets_ok = completar_lead(session_id, telefono, pack_nombre, resumen, contacto.get("utm"))
     mail_ok = enviar_resultado_cliente(contacto.get("email"), contacto.get("nombre"), resultado)
 
     borrar_estado(session_id)

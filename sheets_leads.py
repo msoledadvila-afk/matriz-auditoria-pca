@@ -16,6 +16,13 @@ Estrategia de columnas (una fila por lead, se va completando en dos momentos):
   F: pack_recomendado      (vacío al inicio, se completa al terminar)
   G: resumen_resultado     (vacío al inicio, se completa al terminar)
   H: fecha_hora_completado (vacío al inicio, se completa al terminar)
+  I: utm_source            (de la URL del anuncio; vacío si no vino de uno)
+  J: utm_medium
+  K: utm_campaign
+  L: utm_content
+Las 4 columnas UTM van AL FINAL a propósito: así las columnas A-H (y el
+update E:H de completar_lead) no cambian de lugar y las filas viejas siguen
+siendo válidas, solo con I-L vacías.
 
 Todas las funciones son "best effort": si falla la conexión con Sheets
 (credenciales mal puestas, cuota, etc.) se loguea el error pero NUNCA se
@@ -50,10 +57,38 @@ from datetime import datetime
 logger = logging.getLogger(__name__)
 
 NOMBRE_HOJA = "Leads"  # nombre de la pestaña dentro de la planilla
+COLUMNAS_UTM = ["utm_source", "utm_medium", "utm_campaign", "utm_content"]
 ENCABEZADOS = [
     "fecha_hora_inicio", "session_id", "nombre", "email", "telefono",
     "pack_recomendado", "resumen_resultado", "fecha_hora_completado",
-]
+] + COLUMNAS_UTM
+
+
+def _texto_seguro(valor, max_len=200):
+    """Limpia un valor que viene de la URL (o sea, lo controla el visitante)
+    antes de escribirlo en la planilla: saca caracteres de control/saltos de
+    línea y lo acota. No hace falta escapar fórmulas: append_row/update de
+    gspread 6.x escriben en modo RAW, así que un '=...' queda como texto."""
+    texto = "".join(c for c in str(valor or "") if c.isprintable())
+    return texto.strip()[:max_len]
+
+
+def _valores_utm(utm):
+    """Devuelve las 4 UTM en orden fijo (source, medium, campaign, content),
+    con "" para las que no vinieron. Acepta None o un dict incompleto."""
+    utm = utm if isinstance(utm, dict) else {}
+    return [_texto_seguro(utm.get(clave)) for clave in COLUMNAS_UTM]
+
+
+def _asegurar_columnas(hoja):
+    """Si la pestaña se creó con menos columnas que las que necesitamos
+    (por ejemplo, 8 columnas de una versión anterior), agrega las que faltan
+    para que append_row no choque contra el borde de la grilla."""
+    try:
+        if hoja.col_count < len(ENCABEZADOS):
+            hoja.add_cols(len(ENCABEZADOS) - hoja.col_count)
+    except Exception:
+        logger.exception("No se pudieron agregar columnas a la pestaña '%s'", NOMBRE_HOJA)
 
 
 def _cliente_sheets():
@@ -96,14 +131,18 @@ def _hoja_leads(spreadsheet):
             return None
 
 
-def registrar_lead_inicio(session_id, nombre, email):
-    """Agrega una fila nueva al arrancar la entrevista. No bloquea si falla."""
+def registrar_lead_inicio(session_id, nombre, email, utm=None):
+    """Agrega una fila nueva al arrancar la entrevista. No bloquea si falla.
+
+    utm: dict opcional con utm_source/utm_medium/utm_campaign/utm_content.
+    Si no viene (o viene incompleto), esas columnas quedan vacías."""
     spreadsheet = _cliente_sheets()
     if spreadsheet is None:
         return False
     hoja = _hoja_leads(spreadsheet)
     if hoja is None:
         return False
+    _asegurar_columnas(hoja)
     try:
         fila = [
             datetime.now().isoformat(timespec="seconds"),
@@ -111,7 +150,7 @@ def registrar_lead_inicio(session_id, nombre, email):
             nombre,
             email,
             "", "", "", "",
-        ]
+        ] + _valores_utm(utm)
         hoja.append_row(fila)
         logger.info("Lead registrado en Sheets (session_id=%s, email=%s)", session_id, email)
         return True
@@ -120,12 +159,13 @@ def registrar_lead_inicio(session_id, nombre, email):
         return False
 
 
-def completar_lead(session_id, telefono, pack_nombre, resumen_resultado):
+def completar_lead(session_id, telefono, pack_nombre, resumen_resultado, utm=None):
     """Busca la fila por session_id y completa teléfono + resultado.
 
     Si por algún motivo no encuentra la fila (falló el registro inicial,
     o se limpió la planilla a mano), agrega una fila nueva con todo el
-    lead completo en vez de perder el dato.
+    lead completo en vez de perder el dato. En ese caso también incluye
+    las UTM (si se las pasan) para no perder de qué anuncio vino.
     """
     spreadsheet = _cliente_sheets()
     if spreadsheet is None:
@@ -133,6 +173,7 @@ def completar_lead(session_id, telefono, pack_nombre, resumen_resultado):
     hoja = _hoja_leads(spreadsheet)
     if hoja is None:
         return False
+    _asegurar_columnas(hoja)
 
     try:
         celda = hoja.find(session_id)
@@ -149,7 +190,10 @@ def completar_lead(session_id, telefono, pack_nombre, resumen_resultado):
         else:
             # No se encontró la fila de inicio (ej: falló registrar_lead_inicio) ->
             # agregamos una fila nueva con lo que tenemos, para no perder el lead.
-            hoja.append_row([ahora, session_id, "", "", telefono or "", pack_nombre, resumen_resultado, ahora])
+            hoja.append_row(
+                [ahora, session_id, "", "", telefono or "", pack_nombre, resumen_resultado, ahora]
+                + _valores_utm(utm)
+            )
         return True
     except Exception:
         logger.exception("No se pudo completar el lead en Sheets (session_id=%s)", session_id)
