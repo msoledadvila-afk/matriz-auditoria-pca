@@ -9,8 +9,8 @@ la recomendación comercial y necesitamos que sea 100% determinística.
 
 MENSAJES_CATEGORIA = {
     "tiempo": "Gestión del tiempo: se detecta pérdida significativa de horas en tareas "
-              "operativas y búsqueda de información dispersa. Con IA, estos procesos "
-              "pueden reducirse en un 60-70%.",
+              "operativas y búsqueda de información dispersa. Con IA y un sistema ordenado, "
+              "estos procesos pueden acortarse de forma notable.",
     "procesos": "Procesos operativos: existen tareas repetitivas sin sistematizar y falta "
                 "de documentación que genera retrabajo constante. La automatización "
                 "inteligente puede liberar horas de trabajo manual semanal.",
@@ -29,7 +29,8 @@ TEXTOS_PACK = {
     "autonomia": "Con el {nombre}, implementaremos un sistema personalizado que ataca "
                  "directamente estos cuellos de botella. A través de prompts validados, "
                  "protocolos de delegación inteligente y sesiones de implementación práctica, "
-                 "podés recuperar entre 5 y 10 horas semanales que hoy estás perdiendo en operativa.",
+                 "el objetivo del Modelo PCA™ es que recuperes horas de tu semana que hoy "
+                 "se van en operativa.",
     "equipo": "El {nombre} está diseñado para sistematizar exactamente los flujos donde están "
               "los mayores cuellos de botella detectados. Construiremos protocolos de trabajo "
               "colaborativo con IA, una biblioteca de prompts por área y un sistema de "
@@ -81,13 +82,13 @@ def obtener_recomendacion(catalogo, puntajes_por_categoria, total_pct, preguntas
         if preguntas_completadas < 25:
             razon = ("Con las respuestas registradas hasta ahora, el perfil apunta a "
                       "oportunidades claras de optimización individual. Con el sistema y "
-                      "los prompts correctos, podés recuperar entre 5 y 10 horas semanales "
-                      "de forma inmediata.")
+                      "los prompts correctos, el foco está en devolverle horas a tu "
+                      "semana desde el inicio de la implementación.")
         elif total_pct < 0.7:
             razon = ("El diagnóstico identifica oportunidades claras de optimización "
                       "individual en las áreas con menor puntaje. Con el sistema correcto, "
-                      "podés recuperar entre 5 y 10 horas semanales desde la primera semana "
-                      "de implementación.")
+                      "el foco está en devolverle horas a tu semana a partir de la "
+                      "implementación.")
         else:
             razon = ("Tenés una base sólida. Aún así, existen áreas puntuales que, al "
                       "optimizarse con IA de forma estratégica, pueden multiplicar tu "
