@@ -15,6 +15,8 @@
  *    persona": la clave es lo que protege el envío.
  *
  * Configuración (una sola vez):
+ *  0. Configuración del proyecto → "Mostrar el archivo de manifiesto" y pegar
+ *     appsscript.json de esta carpeta (declara los permisos de envío de mail).
  *  1. Configuración del proyecto (engranaje) → Propiedades del script →
  *     agregar RELAY_TOKEN con una clave larga al azar.
  *  2. Implementar → Nueva implementación → Aplicación web →
