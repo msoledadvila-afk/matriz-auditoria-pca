@@ -116,7 +116,8 @@ TOTAL_PREGUNTAS = sum(len(c["preguntas"]) for c in catalogo["categorias"])
 # enterarse de si falta alguna variable de entorno. Solo confirma presencia
 # (True/False), nunca imprime el valor real de una credencial.
 def _log_estado_config():
-    variables = ["GOOGLE_SERVICE_ACCOUNT_JSON", "GOOGLE_SHEET_ID", "SMTP_USER", "SMTP_APP_PASSWORD"]
+    variables = ["GOOGLE_SERVICE_ACCOUNT_JSON", "GOOGLE_SHEET_ID", "MAIL_RELAY_URL",
+                 "MAIL_RELAY_TOKEN", "SMTP_USER", "SMTP_APP_PASSWORD"]
     for var in variables:
         presente = bool(os.getenv(var))
         logger.info("Config %s: %s", var, "OK (presente)" if presente else "FALTA")
