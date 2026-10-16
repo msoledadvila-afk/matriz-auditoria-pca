@@ -52,7 +52,6 @@ MAX_TOKENS_ACUSE = 700
 MAX_CARACTERES_ACUSE = 450
 
 ACUSE_POR_DEFECTO = "Gracias, me sirve mucho."
-ACLARACION_POR_DEFECTO = "¿Me contás un poco más sobre eso, así lo puedo evaluar bien?"
 
 
 class ErrorModelo(Exception):
@@ -304,22 +303,22 @@ def generar_acuse(system_prompt, historial, siguiente):
 
 
 def generar_aclaracion(system_prompt, historial, pregunta):
-    """Pide más detalle sobre la pregunta en curso (una sola vez por pregunta)."""
+    """Pide más detalle sobre la pregunta en curso (una sola vez por pregunta).
+    El modelo solo escribe una frase amable SIN preguntas; la pregunta la vuelve
+    a poner Python con el texto exacto del catálogo. (En producción, dejar que
+    el modelo formulara la aclaración terminó a veces en una pregunta inventada
+    que no estaba en el catálogo.)"""
     instruccion = (
         "\n\nINSTRUCCIÓN PARA ESTE MENSAJE: la respuesta del cliente no alcanza para evaluar "
-        f"esta pregunta: \"{pregunta['texto']}\". Pedile, en UNA oración amable, un poco más de "
-        "detalle sobre ESA pregunta (podés dar un ejemplo de respuesta). No preguntes otra cosa."
+        f"esta pregunta: \"{pregunta['texto']}\". Escribí UNA oración breve y amable diciendo "
+        "que necesitás un poco más de detalle (podés sugerir qué tipo de dato sirve: horas, "
+        "cantidad, frecuencia, sí/no). NO hagas ninguna pregunta: el sistema la repite después."
     )
     mensajes = [{"role": "system", "content": system_prompt + instruccion},
                 *_contexto_reciente(historial)]
-    texto = limpiar_texto(consultar_modelo(mensajes))
-    oraciones = re.split(r"(?<=[.!?…])\s+", texto)
-    texto = _acotar(" ".join(o for o in oraciones if not _CIERRE_FALSO.search(o)).strip())
-    if "?" in texto:
-        texto = texto[:texto.index("?") + 1]  # una sola pregunta, nunca dos
-    else:
-        texto = (texto + " " + ACLARACION_POR_DEFECTO).strip() if texto else ACLARACION_POR_DEFECTO
-    return texto
+    frase = _acotar(_sin_preguntas(limpiar_texto(consultar_modelo(mensajes))))
+    frase = frase or "Para evaluarlo bien necesito un poco más de detalle."
+    return f"{frase}\n\n{pregunta['texto']}"
 
 
 def bloque_pregunta(pregunta, nueva_categoria):
