@@ -8,11 +8,11 @@ con sesión por visitante en vez de un único archivo de estado compartido.
 Pensado para correr en Render, con el widget del sitio (Netlify) llamando
 por fetch() a este backend.
 
-Reutiliza SIN modificar: cargar_catalogo, crear_system_prompt, consultar_modelo,
-extraer_puntaje, calcular_resultado — todas siguen siendo funciones puras o
-casi puras del módulo original. Lo único que cambia es cómo se persiste y
-recorre el estado: de variables vivas en un while True, a un archivo por
-sesión que se lee y escribe en cada request.
+Desde oct/2026 la secuencia de preguntas la maneja Python (procesar_turno en
+agente_diagnostico_pca.py): el modelo solo puntúa la pregunta en curso y
+escribe comentarios breves; la pregunta siguiente y el cierre los pone el
+código. Acá solo se persiste el estado: un archivo por sesión que se lee y
+escribe en cada request, y que NO se toca si el turno falla.
 """
 
 import json
@@ -25,11 +25,12 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 from agente_diagnostico_pca import (
+    ErrorModelo,
     cargar_catalogo,
     crear_system_prompt,
-    consultar_modelo,
-    extraer_puntaje,
     calcular_resultado,
+    nuevo_estado,
+    procesar_turno,
 )
 from sheets_leads import registrar_lead_inicio, completar_lead, COLUMNAS_UTM
 from notificaciones_email import enviar_resultado_cliente
@@ -73,14 +74,14 @@ def _ruta_estado(session_id):
     return os.path.join(CARPETA_ESTADO, f"estado_{session_id}.json")
 
 
-def guardar_estado(session_id, historial, puntajes, contacto=None, resultado=None):
+def guardar_estado(session_id, estado, contacto=None, resultado=None):
+    """estado = dict de procesar_turno (historial, puntajes, aclaraciones,
+    respuestas_actual). Se le suman contacto y resultado."""
+    datos = {k: v for k, v in estado.items() if k not in ("contacto", "resultado")}
+    datos["contacto"] = contacto or {}
+    datos["resultado"] = resultado  # se completa cuando termina la entrevista
     with open(_ruta_estado(session_id), "w", encoding="utf-8") as f:
-        json.dump({
-            "historial": historial,
-            "puntajes": puntajes,
-            "contacto": contacto or {},
-            "resultado": resultado,  # se completa cuando termina la entrevista
-        }, f, ensure_ascii=False, indent=2)
+        json.dump(datos, f, ensure_ascii=False, indent=2)
 
 
 def cargar_estado(session_id):
@@ -150,32 +151,24 @@ def chat():
     body = request.get_json(silent=True) or {}
     session_id = body.get("session_id")
     mensaje = body.get("mensaje")
+    if isinstance(mensaje, str):
+        mensaje = mensaje.strip()[:2000] or None
+    else:
+        mensaje = None
 
     if session_id:
         estado = cargar_estado(session_id)
         if estado is None:
             return jsonify({"error": "sesión no encontrada o ya finalizada"}), 404
-        historial = estado["historial"]
-        puntajes = estado["puntajes"]
         contacto = estado.get("contacto", {})
 
-        # Caso especial: el frontend está reintentando el turno INICIAL (la
-        # sesión se creó y el lead ya se registró en un intento anterior,
-        # pero Groq falló antes de devolver la primera pregunta). No hay un
-        # "mensaje" nuevo del usuario para agregar acá — solo hay que
-        # reintentar la llamada al modelo sobre el mismo historial. Sin este
-        # caso, cada reintento automático del frontend terminaría creando
-        # una sesión (y un lead en Sheets) nueva y duplicada.
-        es_reintento_inicial = (
-            (not mensaje or not mensaje.strip())
-            and len(historial) == 1
-            and len(puntajes) == 0
-        )
-
-        if not es_reintento_inicial:
-            if not mensaje or not mensaje.strip():
-                return jsonify({"error": "falta 'mensaje'"}), 400
-            historial.append({"role": "user", "content": mensaje})
+        # Sin mensaje solo se acepta mientras la entrevista no arrancó (el
+        # frontend reintenta el turno INICIAL con el mismo session_id cuando
+        # el servidor estaba despertando). Así no se crea una sesión ni un
+        # lead duplicado en Sheets por cada reintento.
+        ya_arranco = any(m.get("role") == "assistant" for m in estado.get("historial", []))
+        if mensaje is None and ya_arranco:
+            return jsonify({"error": "falta 'mensaje'"}), 400
     else:
         # Primer request de esta visita: pedimos nombre y mail ANTES de arrancar
         # la entrevista (así no se pierde el lead si el visitante abandona a
@@ -195,52 +188,54 @@ def chat():
         utm = _leer_utm(body.get("utm"))
 
         session_id = str(uuid.uuid4())
-        historial = [{"role": "user", "content": "Iniciá el diagnóstico."}]
-        puntajes = {}
+        estado = nuevo_estado()
         contacto = {"nombre": nombre, "email": email, "telefono": "", "utm": utm}
+        mensaje = None  # el primer turno es siempre el saludo + la primera pregunta
 
         # Best-effort: si Sheets no está configurado o falla, no cortamos la
         # entrevista — el lead igual se puede recuperar al completar_lead()
         # (agrega la fila si no la encuentra) o revisando logs de Render.
         registrar_lead_inicio(session_id, nombre, email, utm)
+        guardar_estado(session_id, estado, contacto)
 
-    respuesta_modelo = consultar_modelo(historial, SYSTEM_PROMPT)
-    if respuesta_modelo is None:
-        # Guardamos igual lo que había (el turno del usuario, si lo hubo) para
-        # no perder progreso: el frontend puede reintentar con el mismo
-        # session_id sin repetir la entrevista desde cero.
-        guardar_estado(session_id, historial, puntajes, contacto)
+    try:
+        estado_nuevo, salida = procesar_turno(
+            catalogo, SYSTEM_PROMPT, estado, mensaje, nombre=_primer_nombre(contacto)
+        )
+    except ErrorModelo:
+        # No guardamos NADA de este turno: el estado queda como estaba, así el
+        # cliente reenvía la misma respuesta y no se duplica ni se pierde.
         return jsonify({
             "session_id": session_id,
-            "error": "error al consultar el modelo, intentá de nuevo",
+            "error": "No pude procesar tu respuesta. Enviala de nuevo en unos segundos.",
         }), 502
 
-    pregunta_id, puntaje, texto_limpio = extraer_puntaje(respuesta_modelo)
-    if pregunta_id:
-        puntajes[pregunta_id] = puntaje
-    historial.append({"role": "assistant", "content": respuesta_modelo})
-
-    if len(puntajes) >= TOTAL_PREGUNTAS:
-        resultado = calcular_resultado(catalogo, puntajes)
+    if salida["terminado"]:
+        resultado = estado_nuevo.get("resultado") or calcular_resultado(catalogo, estado_nuevo["puntajes"])
         # OJO: todavía NO borramos el estado ni mandamos nada a Sheets/mail acá.
         # Falta confirmar el teléfono (paso siguiente en el frontend), y recién
         # con eso completamos el lead y mandamos el mail. Guardamos el resultado
         # para no tener que recalcularlo en /completar-lead.
-        guardar_estado(session_id, historial, puntajes, contacto, resultado)
+        guardar_estado(session_id, estado_nuevo, contacto, resultado)
         return jsonify({
             "session_id": session_id,
             "terminado": True,
-            "mensaje": texto_limpio,
+            "mensaje": salida["mensaje"],
             "resultado": resultado,
         })
 
-    guardar_estado(session_id, historial, puntajes, contacto)
+    guardar_estado(session_id, estado_nuevo, contacto)
     return jsonify({
         "session_id": session_id,
         "terminado": False,
-        "mensaje": texto_limpio,
-        "progreso": {"respondidas": len(puntajes), "total": TOTAL_PREGUNTAS},
+        "mensaje": salida["mensaje"],
+        "progreso": {"respondidas": salida["respondidas"], "total": salida["total"]},
     })
+
+
+def _primer_nombre(contacto):
+    nombre = ((contacto or {}).get("nombre") or "").strip()
+    return nombre.split()[0][:40] if nombre else None
 
 
 @app.post("/completar-lead")
