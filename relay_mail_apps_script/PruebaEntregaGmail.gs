@@ -54,6 +54,46 @@ function probarEntregaGmail() {
   console.log(log.join('\n'));
 }
 
+/**
+ * Segunda ronda (21/10): con MailApp no llegó NINGUNA variante a Gmail, ni la
+ * de texto plano. Esta prueba manda por GmailApp, que envía como un mail
+ * escrito desde la bandeja de hola@ (queda en "Enviados"), el mismo circuito
+ * que el mail manual que sí llega.
+ *
+ *  P8  GmailApp, texto plano corto
+ *  P9  GmailApp, HTML idéntico al del backend + texto plano, asunto real
+ *
+ * Requiere el permiso https://mail.google.com/ en appsscript.json.
+ */
+function probarEntregaGmailApp() {
+  var hora = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'HH:mm');
+  var log = [];
+  DESTINOS.forEach(function (para) {
+    try {
+      GmailApp.sendEmail(para, '[P8] Prueba GmailApp ' + hora,
+        'Hola Sole, esta es una prueba corta en texto plano enviada con GmailApp.',
+        { name: 'Talento Impulsa Consulting', replyTo: 'hola@talentoimpulsa.com.ar' });
+      log.push('OK enviado P8 → ' + para);
+    } catch (err) {
+      log.push('ERROR P8 → ' + para + ': ' + err);
+    }
+    Utilities.sleep(3000);
+    try {
+      GmailApp.sendEmail(para,
+        '[P9] Tu Diagnóstico PCA — recomendamos Pack Autonomía PCA™ ' + hora,
+        textoPlanoCompleto_(),
+        { htmlBody: htmlBackend_(), name: 'Talento Impulsa Consulting',
+          replyTo: 'hola@talentoimpulsa.com.ar' });
+      log.push('OK enviado P9 → ' + para);
+    } catch (err) {
+      log.push('ERROR P9 → ' + para + ': ' + err);
+    }
+    Utilities.sleep(3000);
+  });
+  log.push('Cuota restante: ' + MailApp.getRemainingDailyQuota());
+  console.log(log.join('\n'));
+}
+
 function armarVariantes_() {
   var hora = Utilities.formatDate(new Date(), 'America/Argentina/Buenos_Aires', 'HH:mm');
   var neutro = function (id) { return '[' + id + '] Resultado de tu diagnostico ' + hora; };

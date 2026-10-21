@@ -5,6 +5,7 @@
   "runtimeVersion": "V8",
   "oauthScopes": [
     "https://www.googleapis.com/auth/script.send_mail",
+    "https://mail.google.com/",
     "https://www.googleapis.com/auth/userinfo.email"
   ],
   "webapp": {
