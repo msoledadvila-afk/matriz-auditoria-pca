@@ -76,6 +76,14 @@ function doPost(e) {
     // un mail con las dos versiones es mejor recibido que uno solo HTML.
     var texto = datos.text ? String(datos.text) : htmlATexto_(html);
 
+    // GmailApp rompe los caracteres fuera del plano básico de Unicode (📂 🎯 🚀
+    // llegaban como "������"; ⏱ y ⚙️ no se rompen). En el HTML se mandan como
+    // entidad numérica, que es ASCII puro y Gmail vuelve a mostrar como emoji;
+    // en el texto plano se quitan. Lo mismo en el asunto, por las dudas.
+    asunto = quitarAstrales_(asunto);
+    texto = quitarAstrales_(texto);
+    html = astralesAEntidades_(html);
+
     GmailApp.sendEmail(para, asunto, texto, {
       htmlBody: html,
       name: NOMBRE_REMITENTE,
@@ -119,6 +127,18 @@ function htmlATexto_(html) {
     .trim();
 }
 
+var REGEX_ASTRAL = /[\uD800-\uDBFF][\uDC00-\uDFFF]/g;
+
+function astralesAEntidades_(s) {
+  return s.replace(REGEX_ASTRAL, function (par) {
+    return '&#' + par.codePointAt(0) + ';';
+  });
+}
+
+function quitarAstrales_(s) {
+  return s.replace(REGEX_ASTRAL, '').replace(/[ \t]{2,}/g, ' ').replace(/^ +/gm, '');
+}
+
 // Comparación en tiempo constante para no filtrar la clave por tiempos de respuesta.
 function compararSeguro_(a, b) {
   if (a.length !== b.length) return false;
@@ -143,7 +163,8 @@ function probarRelay() {
         token: token,
         to: DESTINO_PRUEBA,
         subject: 'Prueba relay Diagnóstico PCA',
-        html: '<p>Si te llegó este mail, el relay funciona.</p>'
+        html: '<p>Si te llegó este mail, el relay funciona.</p>' +
+              '<p>Emojis: 📂 🎯 🚀 🧭 👥 🏛️ ⏱ ⚙️ 💬</p>'
       })
     }
   };
